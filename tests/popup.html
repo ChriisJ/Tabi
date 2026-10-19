@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tabi – Popup (Vorschau)</title>
+  <link rel="stylesheet" href="../ui/common.css">
+  <link rel="stylesheet" href="../popup/popup.css">
+</head>
+<body>
+<script type="module">
+  // Vorschau des Popups gegen die simulierte chrome-API (zwei Profile, ein freier Tab).
+  import { createMock } from './mock-chrome.js';
+  import { DEFAULT_CONFIG } from '../lib/config.js';
+
+  const mock = createMock();
+  globalThis.chrome = mock.chrome;
+  window.__mock = mock;
+  const cfg = structuredClone(DEFAULT_CONFIG);
+  cfg.profiles[0].windows[0].groups[0].tabs[2].protect = false;
+  cfg.profiles.push({ id: 'abend', name: 'Abend', windows: [{ id: 'abend-w', name: 'Entspannen', groups: [
+    { id: 'musik', title: 'Musik', color: 'pink', tabs: [{ id: 'm1', url: 'https://music.example.com/' }] }] }] });
+  mock.store.local.config = cfg;
+  mock.store.local.configRev = Date.now();
+  mock.user.openWindow(['edge://newtab/']);
+  await import(`../background.js?p=${Date.now()}`);
+  mock.fire.startup();
+  await new Promise(r => setTimeout(r, 3500));
+
+  const html = await (await fetch('../popup/popup.html')).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  for (const s of doc.body.querySelectorAll('script')) s.remove();
+  document.body.append(...doc.body.childNodes);
+  const s = document.createElement('script');
+  s.src = '../popup/popup.js';
+  document.body.append(s);
+</script>
+</body>
+</html>

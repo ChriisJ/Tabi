@@ -1,0 +1,13 @@
+# Einheitliche Zeilenenden im Repository (LF), Windows-Checkouts erhalten CRLF automatisch.
+* text=auto
+
+*.js     text eol=lf
+*.json   text eol=lf
+*.html   text eol=lf
+*.css    text eol=lf
+*.md     text eol=lf
+# PowerShell-Skripte unter Windows mit CRLF
+*.ps1    text eol=crlf
+
+*.png    binary
+*.zip    binary

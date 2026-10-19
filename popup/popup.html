@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tabi</title>
+  <link rel="stylesheet" href="../ui/common.css">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="head">
+    <div class="brand">Tabi <span class="sub">Tab-Vorlage</span></div>
+    <label class="switch" title="Schutz aktivieren/deaktivieren">
+      <input type="checkbox" id="enabled">
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <section class="profile-row" id="profileRow" hidden>
+    <label for="profileSelect">Profil</label>
+    <select id="profileSelect" aria-label="Aktives Profil"></select>
+  </section>
+  <section class="switch-box" id="switchBox" hidden>
+    <label class="chk"><input type="checkbox" id="closeOld"> Pflicht-Tabs des bisherigen Profils schließen</label>
+    <div class="switch-actions">
+      <button id="switchCancel" class="btn">Abbrechen</button>
+      <button id="switchGo" class="btn primary">Profil wechseln</button>
+    </div>
+  </section>
+
+  <section id="state" class="state state-grey">
+    <div id="stateTitle" class="state-title">Lade Status …</div>
+    <div id="stateDetail" class="state-detail"></div>
+  </section>
+
+  <section id="windows" class="windows"></section>
+
+  <div class="actions">
+    <button id="restore" class="btn primary">Vorlage jetzt wiederherstellen</button>
+  </div>
+  <div class="actions secondary">
+    <button id="options" class="btn">Vorlage bearbeiten</button>
+    <button id="capture" class="btn" title="Aktuelle Fenster, Gruppen und Tabs als Standard übernehmen">Sitzung als Standard …</button>
+  </div>
+
+  <footer id="footer" class="footer"></footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

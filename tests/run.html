@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tabi Logiktests</title>
+  <style>
+    :root { --bg: #fff; --fg: #1f2328; --ok: #1a7f37; --bad: #b42318; --muted: #656d76; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #1f1f1f; --fg: #e6e6e6; --ok: #6fdd8b; --bad: #ff9b9b; --muted: #a0a0a0; } }
+    body { margin: 0; padding: 16px; background: var(--bg); color: var(--fg); font: 12.5px/1.5 Consolas, ui-monospace, monospace; }
+    h1 { font: 600 16px "Segoe UI", system-ui, sans-serif; margin: 0 0 4px; }
+    p { margin: 0 0 12px; color: var(--muted); font-family: "Segoe UI", system-ui, sans-serif; }
+    #out div { white-space: pre-wrap; word-break: break-word; }
+    .pass { color: var(--ok); } .fail { color: var(--bad); } .section { font-weight: 700; } .summary { font-weight: 700; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>Tabi – Logiktests (simulierte chrome-API)</h1>
+  <p>Führt den echten background.js gegen eine In-Memory-Nachbildung aus. Ersetzt keinen Test in Edge. Dauer ca. 1–2 Minuten.</p>
+  <div id="out"></div>
+  <script type="module" src="run.js"></script>
+</body>
+</html>

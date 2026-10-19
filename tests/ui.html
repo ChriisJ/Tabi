@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tabi – Vorlage (Vorschau)</title>
+  <link rel="stylesheet" href="../ui/common.css">
+  <link rel="stylesheet" href="../options/options.css">
+</head>
+<body>
+<script type="module">
+  // Vorschau der Einstellungsseite gegen die simulierte chrome-API mit einer Beispielsitzung.
+  import { createMock } from './mock-chrome.js';
+
+  const mock = createMock();
+  globalThis.chrome = mock.chrome;
+  const { DEFAULT_CONFIG } = await import('../lib/config.js');
+  mock.store.local.config = structuredClone(DEFAULT_CONFIG);
+  mock.store.local.config.profiles[0].windows[0].groups[0].tabs[2].protect = false;
+  mock.store.local.config.profiles.push({ id: 'abend', name: 'Abend', windows: [{ id: 'abend-w', name: 'Entspannen', groups: [
+    { id: 'musik', title: 'Musik', color: 'pink', collapsed: false, tabs: [{ id: 'm1', url: 'https://music.example.com/' }, { id: 'm2', url: 'https://video.example.org/' }] }] }] });
+  mock.store.local.configRev = Date.now() - 3600e3;
+  if (location.hash === '#fresh') { delete mock.store.local.config; delete mock.store.local.configRev; }
+  window.__mock = mock;
+
+  // Beispielsitzung: ein Fenster mit zwei Gruppen + ungruppierten Tabs, ein zweites Fenster.
+  mock._build([
+    [
+      { url: 'https://mail.example.com/inbox', group: { old: 1, title: 'Arbeit', color: 'blue', collapsed: false } },
+      { url: 'https://calendar.example.com/week', group: { old: 1, title: 'Arbeit', color: 'blue', collapsed: false } },
+      { url: 'https://news.example.org/', group: { old: 2, title: 'Lesen', color: 'purple', collapsed: true } },
+      { url: 'https://blog.example.net/artikel', group: { old: 2, title: 'Lesen', color: 'purple', collapsed: true } },
+      { url: 'https://shop.example.com/warenkorb', group: null },
+      { url: 'edge://settings/', group: null }
+    ],
+    [
+      { url: 'https://music.example.com/', group: { old: 3, title: '', color: 'pink', collapsed: false } },
+      { url: 'https://video.example.org/watch', group: { old: 3, title: '', color: 'pink', collapsed: false } }
+    ]
+  ]);
+  for (const w of mock.wins.values()) for (const t of w.tabs) t.title = new URL(t.url).hostname;
+
+  await import(`../background.js?ui=${Date.now()}`);
+  mock.fire.installed({ reason: 'install' });
+
+  // Markup der echten Einstellungsseite übernehmen.
+  const html = await (await fetch('../options/options.html')).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  for (const s of doc.body.querySelectorAll('script')) s.remove();
+  document.body.append(...doc.body.childNodes);
+  for (const img of document.querySelectorAll('img')) img.src = img.getAttribute('src').replace('../', '/');
+
+  // Kurz warten, bis der Hintergrund die Vorlage aufgebaut hat.
+  await new Promise(r => setTimeout(r, 3500));
+  await import('../options/options.js');
+</script>
+</body>
+</html>

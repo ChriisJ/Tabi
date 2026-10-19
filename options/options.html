@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tabi – Vorlage</title>
+  <link rel="icon" href="../icons/icon32.png">
+  <link rel="stylesheet" href="../ui/common.css">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="../icons/icon48.png" alt="" width="28" height="28">
+      <div>
+        <div class="brand-name">Tabi</div>
+        <div class="brand-sub">Fenster, Gruppen &amp; Pflicht-Tabs</div>
+      </div>
+    </div>
+    <nav class="seg" role="tablist" aria-label="Ansicht">
+      <button role="tab" class="seg-btn" data-view="editor" aria-selected="true">Vorlage</button>
+      <button role="tab" class="seg-btn" data-view="json" aria-selected="false">JSON</button>
+      <button role="tab" class="seg-btn" data-view="log" aria-selected="false">Protokoll</button>
+    </nav>
+    <div class="live">
+      <span id="livePill" class="pill">…</span>
+      <label class="switch" title="Schutz aktivieren/deaktivieren">
+        <input type="checkbox" id="liveEnabled" aria-label="Schutz aktiv">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </header>
+
+  <!-- ===================== Visueller Editor ===================== -->
+  <section id="view-editor" class="view">
+    <div class="actionbar">
+      <div class="ab-left">
+        <button id="btnCapture" class="btn accent-soft" data-icon="capture">Aktuelle Sitzung übernehmen</button>
+        <button id="btnUrls" class="btn" data-icon="link">URLs einfügen</button>
+        <label class="btn" data-icon="import" title="JSON-Vorlage, Favoriten-Datei (HTML) oder Linkliste (TXT)">Importieren<input id="fileImport" type="file" accept=".json,.html,.htm,.txt,application/json,text/html,text/plain" hidden></label>
+        <button id="btnExport" class="btn" data-icon="export" aria-haspopup="menu" aria-expanded="false">Exportieren</button>
+      </div>
+      <div class="ab-right">
+        <span id="dirty" class="dirty" hidden>Ungespeicherte Änderungen</span>
+        <button id="btnDiscard" class="btn ghost" disabled>Verwerfen</button>
+        <button id="btnSaveOnly" class="btn ghost" disabled title="Speichert, ohne fehlende Tabs sofort zu öffnen">Nur speichern</button>
+        <button id="btnSave" class="btn primary" data-icon="save" disabled>Als Standard speichern</button>
+      </div>
+    </div>
+
+    <div id="banner" class="banner" role="status" hidden></div>
+
+    <nav id="profiles" class="pbar" role="tablist" aria-label="Profile"></nav>
+    <div id="profileHead" class="phead"></div>
+
+    <div id="windows" class="windows"></div>
+
+    <div class="add-window-row">
+      <button id="btnAddWindow" class="btn dashed" data-icon="plus">Fenster hinzufügen</button>
+    </div>
+
+    <section class="card sync" id="syncCard">
+      <div class="card-head">
+        <div>
+          <h2>Sync zwischen Geräten</h2>
+          <p class="muted small">Deine Vorlage wird über dein Edge-Konto auf deine anderen Geräte übertragen. Tab-Zuordnungen und „Schutz an/aus“ bleiben pro Gerät.</p>
+        </div>
+        <label class="switch" title="Sync ein/aus">
+          <input type="checkbox" id="syncEnabled" aria-label="Sync aktiv">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="sync-grid">
+        <label class="field">Name dieses Geräts
+          <input id="syncDevice" type="text" maxlength="40" placeholder="z. B. Desktop, Laptop">
+        </label>
+        <div id="syncInfo" class="sync-info"></div>
+      </div>
+      <div class="sync-actions">
+        <button id="btnSyncNow" class="btn" type="button">Jetzt synchronisieren</button>
+        <button id="btnEdgeSync" class="btn ghost" type="button">Edge-Sync-Einstellungen öffnen</button>
+      </div>
+      <p class="muted small sync-note">Voraussetzung: In Edge mit deinem Konto angemeldet, und unter <b>Einstellungen → Profile → Synchronisierung</b> ist <b>„Erweiterungen“</b> eingeschaltet – auf allen Geräten. Tabi muss überall in derselben Version geladen sein.</p>
+    </section>
+
+    <section class="card settings">
+      <h2>Verhalten beim Aufbau</h2>
+      <label class="check"><input type="checkbox" id="setReuse"> <span><b>Leeres Startfenster mitbenutzen</b><br><small>Enthält ein Fenster beim Start nur eine leere Neuer-Tab-Seite, wird das erste fehlende Vorlagenfenster dort aufgebaut, statt ein weiteres Fenster zu öffnen.</small></span></label>
+      <label class="check"><input type="checkbox" id="setFocus"> <span><b>Neue Vorlagenfenster in den Vordergrund holen</b><br><small>Gilt nur für den Aufbau, nie für automatische Reparaturen.</small></span></label>
+    </section>
+  </section>
+
+  <!-- ===================== JSON ===================== -->
+  <section id="view-json" class="view" hidden>
+    <div class="card">
+      <div class="toolbar">
+        <h2>Vorlage als JSON</h2>
+        <div class="spacer"></div>
+        <button id="btnJsonCheck" class="btn">Prüfen</button>
+        <button id="btnJsonApply" class="btn primary">In den Editor übernehmen</button>
+      </div>
+      <p class="muted">Für Experten. Änderungen hier werden erst nach „In den Editor übernehmen“ und anschließendem „Als Standard speichern“ wirksam.</p>
+      <textarea id="json" spellcheck="false" autocomplete="off" aria-label="Vorlage als JSON"></textarea>
+      <div id="jsonResult" class="result" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <!-- ===================== Protokoll ===================== -->
+  <section id="view-log" class="view" hidden>
+    <div class="card">
+      <div class="toolbar">
+        <h2>Debug-Protokoll</h2>
+        <div class="spacer"></div>
+        <button id="btnLog" class="btn">Aktualisieren</button>
+        <button id="btnLogClear" class="btn">Leeren</button>
+      </div>
+      <pre id="log" class="log"></pre>
+    </div>
+  </section>
+
+  <!-- Validierungsleiste -->
+  <footer id="validation" class="validation" aria-live="polite">
+    <button id="valToggle" class="val-summary" aria-expanded="false"></button>
+    <ul id="valList" class="val-list" hidden></ul>
+  </footer>
+
+  <!-- Farbwahl (wird an den jeweiligen Knopf angedockt) -->
+  <div id="colorPop" class="popover" role="dialog" aria-label="Gruppenfarbe" hidden></div>
+
+  <!-- Dialog: Sitzung übernehmen -->
+  <dialog id="dlgCapture" class="dlg">
+    <form method="dialog">
+      <h2>Aktuelle Sitzung übernehmen</h2>
+      <p class="muted">Wähle die Fenster, die zu deinem Standard gehören. Gruppen, Namen, Farben und Reihenfolge werden übernommen.
+        Die offenen Tabs werden direkt als Pflicht-Tabs verknüpft – beim Speichern öffnet sich nichts doppelt.</p>
+      <div id="capList" class="cap-list"></div>
+      <fieldset class="radio-row">
+        <legend class="sr-only">Wohin übernehmen?</legend>
+        <label><input type="radio" name="capMode" value="replace" checked> <span>Profil <b id="capProfileName"></b> ersetzen</span></label>
+        <label><input type="radio" name="capMode" value="append"> Zum Profil hinzufügen</label>
+        <label><input type="radio" name="capMode" value="newprofile"> Als neues Profil</label>
+      </fieldset>
+      <div class="dlg-actions">
+        <button value="cancel" class="btn ghost">Abbrechen</button>
+        <button id="capOk" value="ok" class="btn primary">Übernehmen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Dialog: URLs einfügen -->
+  <dialog id="dlgUrls" class="dlg">
+    <form method="dialog">
+      <h2 id="urlsTitle">URLs einfügen</h2>
+      <p class="muted">Eine Adresse pro Zeile (oder durch Leerzeichen getrennt). „https://“ wird bei Bedarf ergänzt.</p>
+      <textarea id="urlsText" rows="7" spellcheck="false" placeholder="https://example.com/portal-1&#10;example.org/recherche"></textarea>
+      <div id="urlsInfo" class="muted small"></div>
+      <div class="field-row" id="urlsTargetRow">
+        <label>Ziel
+          <select id="urlsTarget"></select>
+        </label>
+      </div>
+      <div id="urlsNew" class="field-grid">
+        <label>Name der neuen Gruppe <input id="urlsGroupTitle" type="text" placeholder="z. B. Recherche"></label>
+        <label>Fenster <select id="urlsWindow"></select></label>
+        <div class="swatches-inline" id="urlsColors" role="radiogroup" aria-label="Farbe"></div>
+      </div>
+      <div class="dlg-actions">
+        <button value="cancel" class="btn ghost">Abbrechen</button>
+        <button id="urlsOk" value="ok" class="btn primary">Hinzufügen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Dialog: Aus offenen Tabs wählen -->
+  <dialog id="dlgPick" class="dlg">
+    <form method="dialog">
+      <h2 id="pickTitle">Aus offenen Tabs wählen</h2>
+      <p class="muted">Ausgewählte Tabs werden zur Gruppe hinzugefügt und direkt verknüpft (sie werden beim Speichern in die Gruppe verschoben, nicht neu geöffnet).</p>
+      <input id="pickFilter" type="search" placeholder="Filtern …" aria-label="Tabs filtern">
+      <div id="pickList" class="pick-list"></div>
+      <div class="dlg-actions">
+        <button value="cancel" class="btn ghost">Abbrechen</button>
+        <button id="pickOk" value="ok" class="btn primary">Hinzufügen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Export-Menü -->
+  <div id="exportMenu" class="menu" role="menu" hidden>
+    <button role="menuitem" type="button" data-export="all"><b>Alle Profile</b><span>JSON – vollständige Sicherung, wieder importierbar</span></button>
+    <button role="menuitem" type="button" data-export="profile"><b>Dieses Profil</b><span>JSON – zum Weitergeben oder Übertragen</span></button>
+    <button role="menuitem" type="button" data-export="html"><b>Dieses Profil als Favoriten</b><span>HTML – in Edge unter Favoriten → Importieren nutzbar</span></button>
+    <button role="menuitem" type="button" data-export="txt"><b>Dieses Profil als Linkliste</b><span>TXT – eine URL pro Zeile</span></button>
+  </div>
+
+  <!-- Dialog: Import -->
+  <dialog id="dlgImport" class="dlg">
+    <form method="dialog">
+      <h2 id="impTitle">Importieren</h2>
+      <p id="impSummary" class="muted"></p>
+      <div id="impGroups" class="imp-groups"></div>
+      <fieldset id="impModes" class="radio-col"></fieldset>
+      <p id="impWarn" class="imp-warn" hidden></p>
+      <div class="dlg-actions">
+        <button value="cancel" class="btn ghost">Abbrechen</button>
+        <button id="impOk" value="ok" class="btn primary">Importieren</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>
