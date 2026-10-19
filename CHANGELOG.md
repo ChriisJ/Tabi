@@ -6,7 +6,19 @@ Kategorien: **Neu** · **Geändert** · **Behoben** · **Entfernt** · **Sicherh
 
 ## [Unveröffentlicht]
 
-_Noch nichts._
+### Neu
+- **Mehrere Profile gleichzeitig:** Profile können parallel laufen, jedes in seinen **eigenen Fenstern** und jedes geschützt, z. B. „Standard“ und „Dev“ nebeneinander.
+  - **Popup:** Jedes Profil hat einen Schalter. Einschalten öffnet das Profil zusätzlich. Ausschalten beendet es, wahlweise mit Schließen seiner Pflicht-Tabs. „nur dieses“ beendet alle anderen.
+  - **Editor:** „Zusätzlich öffnen“, „Nur dieses aktivieren“ und „Beenden“ im Profilkopf. Alle laufenden Profile sind in der Profilleiste mit ● markiert.
+  - Das Popup gruppiert die Fenster nach Profil, wenn mehrere laufen.
+- Beim Öffnen eines Profils werden dessen bereits offene Gruppen wiedererkannt statt doppelt geöffnet.
+
+### Geändert
+- Statt eines aktiven Profils speichert jedes Gerät jetzt eine **Liste aktiver Profile** (`activeProfiles`). Die Einstellung aus 0.4.x wird automatisch übernommen.
+- Ein laufendes Profil kann nicht gelöscht werden. Erst beenden.
+
+### Sicherheit
+- Mindestens ein Profil bleibt immer aktiv. Beim Beenden eines Profils schließt Tabi nie den letzten Tab des letzten Fensters, damit sich Edge nicht beendet. Es bleibt dann ein Tab offen, und Tabi meldet das.
 
 ## [0.4.0] – 2026-10-19
 

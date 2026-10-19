@@ -22,7 +22,7 @@ Tabi/
 ├── lib/
 │   ├── config.js            Vorlagenformat 2, Beispiel, Validierung, Migration, flattenConfig()
 │   └── sync.js              Vorlage für storage.sync zerlegen/prüfen
-├── popup/                   popup.html/.css/.js – Status, Profilwechsel, Wiederherstellen
+├── popup/                   popup.html/.css/.js – Status, Profile an/aus, Wiederherstellen
 ├── options/
 │   ├── options.html/.css    Einstellungsseite
 │   ├── options.js           visueller Editor, Profile, Dialoge, Sync-Karte, Import/Export
@@ -64,7 +64,7 @@ Tabi/
 - Der Zustand liegt in `rt` und wird nach jedem Job in `storage.session` geschrieben. Globale Variablen sind nur Zwischenspeicher.
 - Listener werden synchron auf oberster Ebene registriert (MV3).
 - Automatische Reparaturen öffnen nie Fenster und schließen nie Tabs.
-- Fremde Tabs und Gruppen werden nicht verändert. Ausnahme: ausdrückliche Nutzeraktionen wie „Wiederherstellen“ oder Profilwechsel mit „schließen“, und auch dann nur verwaltete Tabs.
+- Fremde Tabs und Gruppen werden nicht verändert. Ausnahme: ausdrückliche Nutzeraktionen wie „Wiederherstellen“ oder ein Profil mit „schließen“ beenden, und auch dann nur verwaltete Tabs und nie das letzte Fenster.
 
 ## Fehlersuche
 
@@ -73,7 +73,7 @@ Tabi/
 - **Zustand ansehen** (in der Worker-Konsole):
   ```js
   await chrome.storage.session.get('rt')   // Laufzeitzuordnung, bootDone, Schleifenschutz
-  await chrome.storage.local.get(null)     // config, configRev, activeProfile, enabled, hints, sync
+  await chrome.storage.local.get(null)     // config, configRev, activeProfiles, enabled, hints, sync
   await chrome.storage.sync.get(null)      // tpl_meta, tpl_0 …
   ```
 - **Worker gezielt beenden:** DevTools schließen → `edge://serviceworker-internals` → Eintrag `chrome-extension://<ID>/` → **Stop**.

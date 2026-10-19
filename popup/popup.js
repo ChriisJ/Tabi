@@ -34,25 +34,65 @@ function setState(kind, title, detail) {
   $('stateDetail').textContent = detail || '';
 }
 
+// Profilliste: Schalter = Profil läuft (in eigenen Fenstern). „nur dieses“ beendet alle anderen.
 function renderProfiles(st) {
-  const row = $('profileRow');
-  const sel = $('profileSelect');
-  row.hidden = !st.profiles?.length || st.configRev === 0 && st.profiles.length < 2;
-  if (switching) return; // Auswahl nicht überschreiben, während der Wechsel bestätigt wird
-  const sig = JSON.stringify([st.profiles, st.activeProfile]);
-  if (sel.dataset.sig === sig) return;
-  sel.dataset.sig = sig;
-  sel.replaceChildren(...(st.profiles || []).map(p => {
-    const o = el('option', '', p.name);
-    o.value = p.id;
-    return o;
+  const box = $('profileBox');
+  const list = $('profileList');
+  const profiles = st.profiles || [];
+  box.hidden = profiles.length < 2;
+  if (box.hidden) return;
+  const sig = JSON.stringify(profiles) + busy;
+  if (list.dataset.sig === sig) return; // nicht neu zeichnen → Klicks gehen nicht verloren
+  list.dataset.sig = sig;
+  const activeCount = profiles.filter(p => p.active).length;
+  const tabCount = id => st.windows.filter(w => w.profileId === id)
+    .reduce((n, w) => n + w.groups.reduce((m, g) => m + g.tabs.filter(t => t.present).length, 0), 0);
+
+  list.replaceChildren(...profiles.map(p => {
+    const input = el('input');
+    input.type = 'checkbox';
+    input.checked = p.active;
+    input.disabled = busy || (p.active && activeCount === 1); // das letzte aktive Profil bleibt an
+    input.setAttribute('aria-label', `Profil „${p.name}“ ${p.active ? 'beenden' : 'zusätzlich öffnen'}`);
+    input.addEventListener('change', () => {
+      if (input.checked) run(null, { type: 'openProfile', profileId: p.id });
+      else { input.checked = true; askClose(p); }
+    });
+    const sw = el('label', 'switch sm');
+    sw.title = p.active ? (activeCount === 1 ? 'Mindestens ein Profil bleibt aktiv' : 'Profil beenden') : 'Zusätzlich in eigenen Fenstern öffnen';
+    sw.append(input, el('span', 'slider'));
+    const li = el('li', `profile-item${p.active ? ' on' : ''}`);
+    li.append(sw, el('span', 'pname', p.name),
+      el('span', 'pmeta', p.active ? `${tabCount(p.id)} Tabs` : 'aus'));
+    if (!(p.active && activeCount === 1)) {
+      const only = el('button', 'only', 'nur dieses');
+      only.title = `Nur „${p.name}“ aktiv lassen`;
+      only.disabled = busy;
+      only.addEventListener('click', () => askOnly(p));
+      li.append(only);
+    }
+    return li;
   }));
-  sel.value = st.activeProfile;
-  sel.disabled = (st.profiles || []).length < 2;
 }
 
-let switching = false;
+let pendingClose = null; // { kind: 'close'|'only', profile }
 let lastStatus = null;
+
+function askClose(p) {
+  pendingClose = { kind: 'close', profile: p };
+  $('closeTitle').textContent = `Profil „${p.name}“ beenden?`;
+  $('closeGo').textContent = 'Profil beenden';
+  $('closeTabs').parentElement.lastChild.textContent = ' Seine Pflicht-Tabs schließen (eigene Tabs bleiben offen)';
+  $('closeBox').hidden = false;
+}
+
+function askOnly(p) {
+  pendingClose = { kind: 'only', profile: p };
+  $('closeTitle').textContent = `Nur „${p.name}“ aktiv lassen?`;
+  $('closeGo').textContent = 'Andere beenden';
+  $('closeTabs').parentElement.lastChild.textContent = ' Pflicht-Tabs der anderen Profile schließen (eigene Tabs bleiben offen)';
+  $('closeBox').hidden = false;
+}
 
 function render(st) {
   lastStatus = st;
@@ -84,7 +124,13 @@ function render(st) {
 
   const box = $('windows');
   box.replaceChildren();
+  const multi = (st.activeProfiles || []).length > 1;
+  let lastProfile = null;
   for (const w of st.windows) {
+    if (multi && w.profileId !== lastProfile) {
+      box.append(el('div', 'win-profile', w.profileName || ''));
+      lastProfile = w.profileId;
+    }
     const wd = el('div', 'win');
     const head = el('div', 'win-name');
     head.append(el('span', '', w.name), el('span', '', w.open ? 'offen' : 'nicht offen'));
@@ -125,31 +171,34 @@ async function run(btn, msg) {
   if (busy) return;
   busy = true;
   if (btn) btn.disabled = true;
+  if (lastStatus) renderProfiles(lastStatus); // Schalter während der Aktion sperren
+  let error = null;
   try {
     const res = await send(msg);
-    if (res.status) render(res.status);
+    if (res.status) lastStatus = res.status;
   } catch (e) {
-    setState('err', 'Aktion fehlgeschlagen', e.message);
+    error = e;
   } finally {
     busy = false;
     if (btn) btn.disabled = false;
+    if (lastStatus) render(lastStatus);
+    if (error) setState('err', 'Aktion fehlgeschlagen', error.message);
   }
 }
 
-$('profileSelect').addEventListener('change', () => {
-  switching = $('profileSelect').value !== lastStatus?.activeProfile;
-  $('switchBox').hidden = !switching;
+$('closeCancel').addEventListener('click', () => {
+  pendingClose = null;
+  $('closeBox').hidden = true;
 });
-$('switchCancel').addEventListener('click', () => {
-  switching = false;
-  $('switchBox').hidden = true;
-  $('profileSelect').value = lastStatus?.activeProfile;
-});
-$('switchGo').addEventListener('click', async e => {
-  await run(e.currentTarget, { type: 'switchProfile', profileId: $('profileSelect').value, closeOld: $('closeOld').checked });
-  switching = false;
-  $('switchBox').hidden = true;
-  $('profileSelect').dataset.sig = '';
+$('closeGo').addEventListener('click', async e => {
+  if (!pendingClose) return;
+  const { kind, profile } = pendingClose;
+  const closeTabs = $('closeTabs').checked;
+  $('closeBox').hidden = true;
+  pendingClose = null;
+  await run(e.currentTarget, kind === 'only'
+    ? { type: 'switchProfile', profileId: profile.id, closeOld: closeTabs }
+    : { type: 'closeProfile', profileId: profile.id, closeTabs });
   refresh();
 });
 $('enabled').addEventListener('change', e => run(null, { type: 'setEnabled', enabled: e.target.checked }));

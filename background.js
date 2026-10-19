@@ -10,7 +10,7 @@
 //  * Identität eines Pflicht-Tabs während seiner Lebensdauer = Browser-Tab-ID (nicht die URL).
 //    Nach einem Browserneustart werden Tabs konservativ über Gruppentitel + URL-Hinweise erkannt.
 
-import { DEFAULT_CONFIG, validateConfig, flattenConfig, migrateConfig, allKeys } from './lib/config.js';
+import { DEFAULT_CONFIG, validateConfig, flattenConfig, migrateConfig, allKeys, profileKeys } from './lib/config.js';
 import { META_KEY, encodeTemplate, decodeTemplate, staleChunkKeys } from './lib/sync.js';
 
 const TAG = '[Tabi]';
@@ -77,7 +77,8 @@ let hints = { tabs: {}, groups: {} }; // tabKey -> {lastUrl}, groupKey -> {lastT
 // sonst Zeitstempel der letzten Speicherung (hier oder auf einem anderen Gerät via Sync).
 let configRev = 0;
 // Aktives Profil – bewusst NUR lokal (jedes Gerät kann ein anderes Profil nutzen).
-let activeProfile = null;
+// Mehrere Profile können gleichzeitig aktiv sein (jedes in seinen eigenen Fenstern).
+let activeProfiles = [];
 // Geräteeinstellungen für den Sync (nur lokal gespeichert).
 let syncCfg = { enabled: true, deviceId: '', deviceName: '' };
 let syncState = { lastPushAt: null, lastPullAt: null, lastFrom: null, error: null, pendingChoice: null };
@@ -94,11 +95,11 @@ function applyConfig(raw) {
   const v = validateConfig(raw);
   if (v.ok) {
     cfg = v.config;
-    flat = flattenConfig(cfg, activeProfile);
-    if (flat.profileId !== activeProfile) {
-      // Aktives Profil existiert nicht (mehr) → erstes Profil verwenden.
-      activeProfile = flat.profileId;
-      chrome.storage.local.set({ activeProfile }).catch(() => {});
+    flat = flattenConfig(cfg, activeProfiles);
+    if (flat.profileIds.join('|') !== activeProfiles.join('|')) {
+      // Aktive Profile existieren nicht (mehr), z. B. per Sync gelöscht → bereinigen.
+      activeProfiles = flat.profileIds;
+      chrome.storage.local.set({ activeProfiles }).catch(() => {});
     }
     configError = null;
   } else {
@@ -110,10 +111,12 @@ function applyConfig(raw) {
 
 async function loadAll() {
   const [local, session] = await Promise.all([
-    chrome.storage.local.get(['config', 'configRev', 'enabled', 'hints', 'sync', 'syncState', 'activeProfile']),
+    chrome.storage.local.get(['config', 'configRev', 'enabled', 'hints', 'sync', 'syncState', 'activeProfiles', 'activeProfile']),
     chrome.storage.session.get(['rt'])
   ]);
-  activeProfile = local.activeProfile || null;
+  // „activeProfile“ (ein einzelnes Profil) stammt aus Tabi 0.4.x.
+  activeProfiles = Array.isArray(local.activeProfiles) ? local.activeProfiles
+    : (local.activeProfile ? [local.activeProfile] : []);
   if (local.config === undefined) {
     rawConfig = structuredClone(DEFAULT_CONFIG);
     configRev = 0;
@@ -407,7 +410,7 @@ async function liveWindow(windowKey) {
 //     Die unscharfen Stufen gelten nur, wenn die Laufzeitzuordnung verloren ging (rt.bootDone=false).
 //  4. Tabs außerhalb zugeordneter Gruppen werden nie übernommen.
 
-async function adoptExisting(reason) {
+async function adoptExisting(reason, { fuzzyKeys = null } = {}) {
   if (!flat) return { tabs: 0, groups: 0 };
   pruneToConfig();
 
@@ -473,7 +476,9 @@ async function adoptExisting(reason) {
     if (groupId == null) continue;
 
     const members = (tabsByGroup.get(groupId) || []).filter(t => !usedTabIds.has(t.id));
-    for (const level of levels) {
+    // Frisch aktivierte Profile: deren Tabs sind noch nicht zugeordnet → unscharf erlaubt.
+    const groupLevels = fuzzyKeys?.has(gk) ? [3, 2, 1] : levels;
+    for (const level of groupLevels) {
       for (const tk of gdef.tabKeys) {
         if (rt.tabs[tk] != null) continue;
         const hit = members.find(t => !usedTabIds.has(t.id) && urlMatchLevel(tk, tabUrl(t)) === level);
@@ -1135,50 +1140,70 @@ async function manualRestore() {
 }
 
 /**
- * Profil wechseln. Das neue Profil wird aufgebaut (bereits offene passende Gruppen werden übernommen).
- * closeOld: Pflicht-Tabs des bisherigen Profils danach schließen – eigene Tabs bleiben immer offen.
- * Ohne closeOld bleiben die alten Tabs offen und sind ab jetzt einfach nicht mehr verwaltet.
+ * Setzt die Menge der aktiven Profile. Jedes aktive Profil läuft in seinen eigenen Fenstern.
+ *  - Hinzugekommene Profile werden aufgebaut (bereits offene passende Gruppen werden übernommen).
+ *  - Entfernte Profile sind danach nicht mehr geschützt. Mit closeRemoved werden ihre Pflicht-Tabs
+ *    geschlossen – eigene Tabs bleiben immer offen.
+ * Reihenfolge: erst aufbauen, dann schließen; außerdem wird nie das letzte Fenster geschlossen.
+ * So kann ein Profilwechsel Edge nicht beenden.
  */
-async function switchProfile(profileId, closeOld) {
+async function setActiveProfiles(nextIds, closeRemoved) {
   if (!cfg) throw new Error(`Konfiguration ungültig: ${configError}`);
-  const target = cfg.profiles.find(p => p.id === profileId);
-  if (!target) throw new Error('Dieses Profil gibt es nicht (mehr).');
-  if (profileId === activeProfile) return { created: 0, moved: 0, windows: 0, closed: 0 };
+  const known = new Set(cfg.profiles.map(p => p.id));
+  const next = [...new Set(nextIds)].filter(id => known.has(id));
+  if (!next.length) throw new Error('Mindestens ein Profil muss aktiv bleiben.');
+  // Reihenfolge der Profile wie in der Vorlage (bestimmt die Fensterreihenfolge beim Aufbau).
+  next.sort((a, b) => cfg.profiles.findIndex(p => p.id === a) - cfg.profiles.findIndex(p => p.id === b));
 
-  const oldName = flat?.profileName;
-  const oldTabIds = Object.values(rt.tabs);
+  const added = next.filter(id => !activeProfiles.includes(id));
+  const removed = activeProfiles.filter(id => !next.includes(id));
+  if (!added.length && !removed.length) return { created: 0, moved: 0, windows: 0, closed: 0, keptOpen: 0 };
+
+  const name = id => cfg.profiles.find(p => p.id === id)?.name || id;
+  // Tab-IDs der Profile, die beendet werden (vor dem Bereinigen der Zuordnung merken).
+  const removedKeys = new Set(removed.flatMap(id => [...profileKeys(cfg, id)]));
+  const removedTabIds = Object.entries(rt.tabs).filter(([k]) => removedKeys.has(k)).map(([, id]) => id);
+
   resetLoopGuards();
-  rt.tabs = {};
-  rt.groups = {};
-  rt.windows = {};
-
-  activeProfile = profileId;
-  await chrome.storage.local.set({ activeProfile });
+  activeProfiles = next;
+  await chrome.storage.local.set({ activeProfiles });
   applyConfig(rawConfig);
-  log('info', `Profilwechsel: „${oldName}“ → „${target.name}“${closeOld ? ' (alte Pflicht-Tabs werden geschlossen)' : ''}.`);
+  pruneToConfig(); // Zuordnungen beendeter Profile lösen – ihre Tabs bleiben vorerst offen
+  log('info', `Aktive Profile: ${next.map(name).join(', ')}${added.length ? ` (neu: ${added.map(name).join(', ')})` : ''}${removed.length ? ` (beendet: ${removed.map(name).join(', ')}${closeRemoved ? ', Pflicht-Tabs werden geschlossen' : ''})` : ''}.`);
 
-  // Erst das neue Profil aufbauen, DANN alte Tabs schließen – so bleibt immer ein Fenster offen
-  // und Edge beendet sich nicht.
-  await adoptExisting('profilwechsel');
-  const res = await reconcile({ createWindows: true, reason: `Profil „${target.name}“` });
+  let res = { created: 0, moved: 0, windows: 0 };
+  if (added.length) {
+    // Für neu aktivierte Profile ist die unscharfe Wiedererkennung erlaubt (ihre Tabs sind noch nicht zugeordnet).
+    const addedKeys = new Set(added.flatMap(id => [...profileKeys(cfg, id)]));
+    await adoptExisting('profil geöffnet', { fuzzyKeys: addedKeys });
+    res = await reconcile({ createWindows: true, onlyKeys: new Set([...addedKeys].filter(k => flat.tabs[k])), reason: `Profil ${added.map(name).map(n => `„${n}“`).join(', ')}` });
+  }
   finishBoot(rt.bootMode || 'profilwechsel');
 
   let closed = 0;
-  if (closeOld && oldTabIds.length) {
-    const keep = new Set(Object.values(rt.tabs)); // vom neuen Profil übernommene Tabs bleiben
+  let keptOpen = 0;
+  if (closeRemoved && removedTabIds.length) {
+    const keep = new Set(Object.values(rt.tabs)); // von aktiven Profilen übernommene Tabs bleiben
     const toClose = [];
-    for (const id of oldTabIds) if (!keep.has(id) && (await getTab(id))) toClose.push(id);
+    for (const id of removedTabIds) if (!keep.has(id) && (await getTab(id))) toClose.push(id);
+    // Nie alle Tabs aller Fenster schließen – sonst würde sich Edge beenden.
+    const allTabs = (await normalWindows(true)).flatMap(w => w.tabs || []);
+    if (toClose.length && toClose.length >= allTabs.length) {
+      keptOpen = 1;
+      toClose.pop();
+      log('warn', 'Ein Tab bleibt offen, damit Edge sich nicht beendet.');
+    }
     if (toClose.length) {
       try {
         await withRetry('tabs.remove', () => chrome.tabs.remove(toClose));
         closed = toClose.length;
       } catch (e) {
-        log('warn', `Alte Pflicht-Tabs konnten nicht alle geschlossen werden: ${e?.message || e}`);
+        log('warn', `Pflicht-Tabs konnten nicht alle geschlossen werden: ${e?.message || e}`);
       }
     }
   }
-  setLastAction(`Profil „${target.name}“ aktiv${closed ? `, ${closed} alte(r) Tab(s) geschlossen` : ''}`);
-  return { ...res, closed };
+  setLastAction(`Aktiv: ${next.map(name).join(', ')}${closed ? ` · ${closed} Tab(s) geschlossen` : ''}`);
+  return { ...res, closed, keptOpen };
 }
 
 // Verknüpft Vorlagen-Schlüssel direkt mit offenen Fenstern/Gruppen/Tabs (aus „Sitzung übernehmen“
@@ -1448,7 +1473,10 @@ async function buildStatus() {
   if (flat) {
     for (const wk of flat.windowOrder) {
       const wdef = flat.windows[wk];
-      const w = { key: wk, name: wdef.name, open: winIds.has(rt.windows[wk]), groups: [] };
+      const w = {
+        key: wk, name: wdef.name, open: winIds.has(rt.windows[wk]), groups: [],
+        profileId: wdef.profileId, profileName: flat.profileNames[wdef.profileId]
+      };
       for (const gk of wdef.groupKeys) {
         const gdef = flat.groups[gk];
         const gid = rt.groups[gk];
@@ -1484,8 +1512,9 @@ async function buildStatus() {
     paused: Object.keys(rt.paused),
     totals: { expected, present, missing: expected - present, misplaced: misplacedCount, freeTotal, freeOpen },
     windows,
-    activeProfile,
-    profiles: (cfg?.profiles || []).map(p => ({ id: p.id, name: p.name })),
+    activeProfiles: [...activeProfiles],
+    activeProfile: activeProfiles[0] || null, // Kompatibilität (0.4.x)
+    profiles: (cfg?.profiles || []).map(p => ({ id: p.id, name: p.name, active: activeProfiles.includes(p.id) })),
     lastAction: rt.lastAction,
     lastError: rt.lastError,
     configRev,
@@ -1526,9 +1555,17 @@ async function handleMessage(msg) {
       return { result, status: await buildStatus() };
     }
     case 'getConfig':
-      return { config: rawConfig, valid: !!flat, configError, configRev, activeProfile };
-    case 'switchProfile': {
-      const result = await enqueue('profilwechsel', () => switchProfile(msg.profileId, !!msg.closeOld));
+      return { config: rawConfig, valid: !!flat, configError, configRev, activeProfiles: [...activeProfiles], activeProfile: activeProfiles[0] || null };
+    case 'switchProfile': { // nur dieses Profil aktiv (die übrigen werden beendet)
+      const result = await enqueue('profilwechsel', () => setActiveProfiles([msg.profileId], !!msg.closeOld));
+      return { result, status: await buildStatus() };
+    }
+    case 'openProfile': { // zusätzlich öffnen (in eigenen Fenstern)
+      const result = await enqueue('profil-öffnen', () => setActiveProfiles([...activeProfiles, msg.profileId], false));
+      return { result, status: await buildStatus() };
+    }
+    case 'closeProfile': { // beenden, optional mit Schließen seiner Pflicht-Tabs
+      const result = await enqueue('profil-beenden', () => setActiveProfiles(activeProfiles.filter(id => id !== msg.profileId), !!msg.closeTabs));
       return { result, status: await buildStatus() };
     }
     case 'saveConfig': {

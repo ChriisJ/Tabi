@@ -21,7 +21,7 @@ Tabi pinnt keine Tabs an, ersetzt keine Tab-Leiste, sperrt keine Navigation und 
 |---|---|
 | 🗂️ **Vorlage** | Feste Fenster → native Edge-Gruppen (Name, Farbe, Reihenfolge, auf-/zugeklappt) → Tabs |
 | 🔒 **Geschützte Tabs** | Geschlossene Pflicht-Tabs kommen sofort zurück, auch ganze geschlossene Gruppen. Einzelne Tabs können als 🔓 *frei* markiert werden. |
-| 👤 **Profile** | Mehrere Vorlagen, z. B. „Arbeit“ und „Abend“, mit Wechsel per Klick, wahlweise mit Aufräumen des alten Profils |
+| 👤 **Profile** | Mehrere Vorlagen, z. B. „Standard“ und „Dev“. Sie laufen **gleichzeitig in eigenen Fenstern** oder einzeln, an- und abschaltbar per Klick. |
 | 🖱️ **Visueller Editor** | Farben, Namen, Drag & Drop, „aktuelle Sitzung übernehmen“, URLs einfügen, Rückgängig |
 | 🔄 **Sync** | Vorlage über dein Edge-Konto auf andere Geräte übertragen (siehe Hinweise) |
 | ⇄ **Export/Import** | JSON, Edge-Favoritendatei (HTML), Linkliste (TXT) |

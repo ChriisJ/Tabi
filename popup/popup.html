@@ -16,15 +16,16 @@
     </label>
   </header>
 
-  <section class="profile-row" id="profileRow" hidden>
-    <label for="profileSelect">Profil</label>
-    <select id="profileSelect" aria-label="Aktives Profil"></select>
+  <section class="profiles" id="profileBox" hidden>
+    <div class="profiles-head">Profile <span class="hint">– jedes aktive Profil läuft in eigenen Fenstern</span></div>
+    <ul id="profileList" class="profile-list"></ul>
   </section>
-  <section class="switch-box" id="switchBox" hidden>
-    <label class="chk"><input type="checkbox" id="closeOld"> Pflicht-Tabs des bisherigen Profils schließen</label>
+  <section class="switch-box" id="closeBox" hidden>
+    <div id="closeTitle" class="close-title"></div>
+    <label class="chk"><input type="checkbox" id="closeTabs" checked> Seine Pflicht-Tabs schließen (eigene Tabs bleiben offen)</label>
     <div class="switch-actions">
-      <button id="switchCancel" class="btn">Abbrechen</button>
-      <button id="switchGo" class="btn primary">Profil wechseln</button>
+      <button id="closeCancel" class="btn">Abbrechen</button>
+      <button id="closeGo" class="btn primary">Profil beenden</button>
     </div>
   </section>
 

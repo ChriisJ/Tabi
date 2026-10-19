@@ -20,7 +20,7 @@ Tabi hat **keine** Host-Berechtigungen und keine Content-Scripts. Es kann den In
 |---|---|---|
 | Vorlage: Profile, Fenster, Gruppennamen und -farben, Start-URLs | `storage.local`, bei aktivem Sync zusätzlich `storage.sync` (dein Edge-Konto) | Kernfunktion |
 | Zuletzt gesehene URL je Pflicht-Tab, zuletzt gesehener Gruppentitel | `storage.local`, nur auf diesem Gerät | Wiedererkennung nach einem Neustart, auch nach Navigation |
-| Aktives Profil, Schutz an/aus, Gerätename, Sync-Status | `storage.local` | Einstellungen dieses Geräts |
+| Laufende Profile, Schutz an/aus, Gerätename, Sync-Status | `storage.local` | Einstellungen dieses Geräts |
 | Laufzeitzuordnung und Protokoll (max. 300 Einträge, mit Tab-Schlüsseln und Adressen) | `storage.session`, gelöscht beim Browserneustart | Betrieb und Fehlersuche |
 
 - **Sync** nutzt den Speicher deines Edge-Kontos (`chrome.storage.sync`). Übertragen wird nur die Vorlage. Der Sync lässt sich in den Einstellungen pro Gerät ausschalten.

@@ -1,6 +1,6 @@
 # Bedienung
 
-Stand: Version 0.4.0 · [Zurück zur Übersicht](../README.md)
+Stand: Version 0.4.0 + unveröffentlichte Änderungen ([Changelog](../CHANGELOG.md#unveröffentlicht)) · [Zurück zur Übersicht](../README.md)
 
 - [Installation](#installation)
 - [Edge-Einstellungen](#edge-einstellungen)
@@ -59,7 +59,7 @@ Alternativ kannst du die Vorlage im [Editor](#der-editor) von Hand aufbauen oder
 
 ## Das Popup
 
-- **Profil:** zeigt das aktive Profil und wechselt bei mehreren Profilen ([Profile](#profile)).
+- **Profile** (ab zwei Profilen): ein Schalter je Profil zum zusätzlichen Öffnen oder Beenden, dazu „nur dieses“ ([Profile](#profile)). Laufen mehrere, sind die Fenster darunter nach Profil gruppiert.
 - **Schalter oben rechts:** Schutz an/aus. Beim Ausschalten bleiben alle Tabs unverändert. Beim Einschalten wird einmal abgeglichen und Fehlendes ergänzt.
 - **Status:**
   - grün: alle geschützten Tabs offen
@@ -98,15 +98,29 @@ Alternativ kannst du die Vorlage im [Editor](#der-editor) von Hand aufbauen oder
 
 ## Profile
 
-- Eine Vorlage kann **mehrere Profile** enthalten, z. B. „Arbeit“ und „Abend“, jedes mit eigenen Fenstern, Gruppen und Tabs.
-- **Pro Gerät ist genau ein Profil aktiv.** Die Auswahl wird nur lokal gespeichert, Laptop und Desktop können also verschiedene Profile nutzen. Die Profile selbst werden [synchronisiert](#sync-zwischen-geräten).
-- **Bearbeiten:** Die Profilleiste oben im Editor wählt das Profil, das du bearbeitest. Das aktive ist mit ● markiert. Bearbeiten heißt *nicht* aktivieren.
-- **Anlegen, umbenennen, duplizieren, löschen:** über „+ Profil“, den Namen im Profilkopf und die Symbole rechts daneben. Das aktive Profil lässt sich nicht löschen.
-- **Wechseln:** im Popup die Auswahl „Profil“ → „Profil wechseln“, oder im Editor „Dieses Profil aktivieren“. Das Profil muss gespeichert sein.
-  - Tabi baut das neue Profil auf. Bereits offene passende Gruppen werden übernommen statt doppelt geöffnet.
-  - **Mit** „Pflicht-Tabs des bisherigen Profils schließen“ schließt Tabi danach die Pflicht-Tabs des alten Profils. Eigene Tabs bleiben immer offen. Erst wird aufgebaut, dann geschlossen, deshalb beendet sich Edge nie durch einen Wechsel.
-  - **Ohne** diese Option bleiben die alten Tabs offen, sind aber nicht mehr geschützt.
+- Eine Vorlage kann **mehrere Profile** enthalten, z. B. „Standard“ und „Dev“, jedes mit eigenen Fenstern, Gruppen und Tabs.
+- **Mehrere Profile können gleichzeitig laufen**, jedes in seinen eigenen Fenstern und jedes geschützt. Beispiel: „Standard“ in einem Fenster, „Dev“ in einem zweiten.
+- Welche Profile auf einem Gerät laufen, wird nur lokal gespeichert. Laptop und Desktop können also verschiedene Profile nutzen. Die Profile selbst werden [synchronisiert](#sync-zwischen-geräten).
+
+**Im Popup** hat jedes Profil einen Schalter:
+
+| Aktion | Wirkung |
+|---|---|
+| Schalter **an** | Das Profil startet **zusätzlich** in eigenen Fenstern. Bereits offene passende Gruppen werden übernommen statt doppelt geöffnet. |
+| Schalter **aus** | Das Profil wird beendet. Mit „Seine Pflicht-Tabs schließen“ verschwinden seine Tabs, ohne Haken bleiben sie offen, sind aber nicht mehr geschützt. Eigene Tabs bleiben immer offen. |
+| **nur dieses** | Alle anderen Profile werden beendet, wahlweise mit Schließen ihrer Pflicht-Tabs. |
+
+Mindestens ein Profil bleibt immer aktiv, der letzte Schalter ist deshalb gesperrt. Würde das Beenden alle Fenster schließen, lässt Tabi einen Tab offen, damit sich Edge nicht beendet.
+
+**Im Editor**
+- Die Profilleiste oben wählt das Profil, das du **bearbeitest**. Laufende Profile sind mit ● markiert. Bearbeiten heißt *nicht* starten.
+- Im Profilkopf: **„Zusätzlich öffnen“**, **„Nur dieses aktivieren“** oder bei laufenden Profilen **„Beenden“** bzw. **„Nur dieses“**. Gestartet wird die *gespeicherte* Fassung, also vorher speichern.
+- **Anlegen, umbenennen, duplizieren, löschen:** über „+ Profil“, den Namen im Profilkopf und die Symbole rechts daneben. Ein laufendes Profil lässt sich erst nach dem Beenden löschen.
 - „Aktuelle Sitzung übernehmen“ kann ein Profil ersetzen, ergänzen oder ein **neues Profil** anlegen.
+
+**Gut zu wissen**
+- Gruppennamen dürfen sich zwischen Profilen wiederholen, z. B. „Tools“ in „Standard“ und in „Dev“. Tabi unterscheidet sie über die Tabs.
+- Beim Browserstart werden alle laufenden Profile wiederhergestellt bzw. aufgebaut.
 
 ## Schutz pro Tab
 
@@ -187,7 +201,9 @@ Tabi überträgt die **Vorlage mit allen Profilen** über dein Edge-Konto (`chro
 
 | Situation | Tabi … |
 |---|---|
-| Edge startet | wartet auf die Sitzungswiederherstellung, übernimmt vorhandene Tabs und ergänzt fehlende Fenster, Gruppen und Tabs des aktiven Profils |
+| Edge startet | wartet auf die Sitzungswiederherstellung, übernimmt vorhandene Tabs und ergänzt fehlende Fenster, Gruppen und Tabs **aller laufenden Profile** |
+| Profil eingeschaltet | baut es in eigenen Fenstern auf, übernimmt dabei vorhandene passende Gruppen |
+| Profil ausgeschaltet | beendet den Schutz, schließt auf Wunsch seine Pflicht-Tabs, aber nie das letzte Fenster |
 | Pflicht-Tab geschlossen | öffnet ihn nach ca. 0,5 s im Hintergrund wieder |
 | freier Tab geschlossen | nichts |
 | eigener Tab geschlossen, auch in einer Vorlagengruppe | nichts |

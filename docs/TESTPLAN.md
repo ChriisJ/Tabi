@@ -1,10 +1,10 @@
 # Testplan
 
-Stand: Version 0.4.0 · [Zurück zur Übersicht](../README.md)
+Stand: Version 0.4.0 + unveröffentlichte Änderungen ([Changelog](../CHANGELOG.md#unveröffentlicht)) · [Zurück zur Übersicht](../README.md)
 
 ## Kennzeichnung
 
-- **[S]** – automatisiert gegen eine **simulierte** chrome-API geprüft (`tests/run.html`). Bei 0.4.0 bestehen alle **106 Prüfungen**. Die Simulation bildet das Gruppen- und Positionsverhalten von Chromium nur **näherungsweise** nach.
+- **[S]** – automatisiert gegen eine **simulierte** chrome-API geprüft (`tests/run.html`). Aktuell (0.4.0 + unveröffentlichte Änderungen) bestehen alle **116 Prüfungen**. Die Simulation bildet das Gruppen- und Positionsverhalten von Chromium nur **näherungsweise** nach.
 - **[E]** – in echtem Edge zu prüfen. **Bisher in echtem Edge nicht durchgeführt.** Ergebnisse bitte unten in die [Testprotokolle](#testprotokolle) eintragen.
 
 ## Automatisierte Logiktests
@@ -20,7 +20,7 @@ Danach im Browser öffnen:
 
 Ist Port 8765 belegt, `-Port 8766` anhängen.
 
-**Abgedeckt:** Validierung, Installation, Mehrfach-Wiederherstellen, Schließen einzeln, mehrfach, als Gruppe, letzter Tab, fremder Tab, Fenster, Edge-Ende, Neustart mit und ohne bzw. mit verspäteter Sitzungswiederherstellung, Start ohne Fenster, SW-Neustart, Update, Navigation, Verschieben, Schutz aus/an, Schleifenschutz, Konfigurationsänderungen, gleiche URLs, Sitzungsübernahme mit Verknüpfung, Sync (Kodierung, neues Gerät, Empfang, Upload, Konflikt), Profile, freie Tabs, Favoriten-HTML, Linkliste.
+**Abgedeckt:** Validierung, Installation, Mehrfach-Wiederherstellen, Schließen einzeln, mehrfach, als Gruppe, letzter Tab, fremder Tab, Fenster, Edge-Ende, Neustart mit und ohne bzw. mit verspäteter Sitzungswiederherstellung, Start ohne Fenster, SW-Neustart, Update, Navigation, Verschieben, Schutz aus/an, Schleifenschutz, Konfigurationsänderungen, gleiche URLs, Sitzungsübernahme mit Verknüpfung, Sync (Kodierung, neues Gerät, Empfang, Upload, Konflikt), Profile, mehrere Profile gleichzeitig (öffnen, schützen, Neustart, beenden, letztes Fenster), freie Tabs, Favoriten-HTML, Linkliste.
 
 ## Manuelle Tests in Edge
 
@@ -57,6 +57,10 @@ Ist Port 8765 belegt, `-Port 8766` anhängen.
 | 27 | Freier Tab | Tab auf 🔓 stellen, speichern, schließen | Bleibt zu, nicht „fehlend“. Bei Start bzw. „Wiederherstellen“ wieder da. | [S] [E] |
 | 28 | Favoriten-Import | Edge-Favoriten als HTML exportieren und in Tabi importieren | Ordner werden Gruppen und sind abwählbar, Bookmarklets fehlen. | [S] Parser, [E] Dialog |
 | 29 | Favoriten-Export | Profil als Favoriten exportieren und in Edge importieren | Ordner „Tabi – Profilname“ mit Unterordnern je Fenster und Gruppe. | [E] |
+| 30 | Zwei Profile gleichzeitig | „Standard“ läuft. Im Popup „Dev“ einschalten. In beiden je einen Pflicht-Tab schließen. | „Dev“ öffnet sich in eigenen Fenstern, „Standard“ bleibt unverändert. Beide Tabs kommen zurück. Das Popup gruppiert die Fenster nach Profil. | [S] [E] |
+| 31 | Neustart mit zwei Profilen | Wie 30, dann Edge mit Sitzungswiederherstellung neu starten | Beide Profile laufen weiter, nichts doppelt. | [S] [E] |
+| 32 | Profil beenden | Schalter von „Dev“ aus, „Seine Pflicht-Tabs schließen“ angehakt | Die Dev-Tabs schließen sich, Standard bleibt. Der Schalter des letzten aktiven Profils ist gesperrt. | [S] [E] |
+| 33 | Nie das letzte Fenster | Nur noch Dev-Fenster offen (Standard-Fenster geschlossen), dann Dev mit „schließen“ beenden | Ein Tab bleibt offen, Edge beendet sich nicht, Tabi meldet es. | [S] [E] |
 
 ## Testprotokolle
 

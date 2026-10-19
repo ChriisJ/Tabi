@@ -556,7 +556,53 @@ async function testProfilesAndProtect() {
   check('Zurück zu „Alltag“: vorhandene Gruppen übernommen, nur Fehlendes ergänzt', s.activeProfile === 'alltag' && s.totals.missing === 0 && countUrl(m, P1) === 1 && countUrl(m, P2) === 1 && groupsNamed(m, 'Gaming') === 1, { s: s.totals, r: r.result });
   check('„Pflicht-Tabs schließen“ schließt die Tabs von „Abend“', countUrl(m, M1) === 0 && countUrl(m, M2) === 0 && r.result.closed === 2, r.result);
   check('Eigener Tab (Neuer-Tab-Seite) bleibt offen', countUrl(m, 'edge://newtab/') === 1);
-  check('Aktives Profil bleibt lokal gespeichert', m.store.local.activeProfile === 'alltag');
+  check('Aktives Profil bleibt lokal gespeichert', eq(m.store.local.activeProfiles, ['alltag']));
+
+  title('Mehrere Profile gleichzeitig (jedes in eigenen Fenstern)');
+  const winsBefore = m.wins.size;
+  r = await m.send({ type: 'openProfile', profileId: 'abend' });
+  s = await idle(m);
+  const abendWin = [...m.groups.values()].find(g => g.title === 'Musik' && g.id !== ownGroup)?.windowId;
+  const alltagWins = new Set([windowOfGroup(m, 'Gaming'), windowOfGroup(m, 'Recherche'), windowOfGroup(m, 'Tools')]);
+  check('„Abend“ zusätzlich geöffnet, „Alltag“ bleibt aktiv', eq(s.activeProfiles, ['alltag', 'abend']) && s.totals.expected === 7 && s.totals.missing === 0, { active: s.activeProfiles, totals: s.totals });
+  check('„Abend“ läuft in einem eigenen, neuen Fenster', abendWin && !alltagWins.has(abendWin) && m.wins.size === winsBefore + 1, { abendWin, alltagWins: [...alltagWins], wins: m.wins.size });
+  check('„Alltag“ unverändert (nichts doppelt)', countUrl(m, P1) === 1 && countUrl(m, P2) === 1 && countUrl(m, R1) === 1);
+  m.user.closeTab(tabId(m, M1));
+  m.user.closeTab(tabId(m, P2));
+  await idle(m);
+  check('Beide Profile sind gleichzeitig geschützt', countUrl(m, M1) === 1 && countUrl(m, P2) === 1);
+  check('Status kennt das Profil jedes Fensters', s.windows.some(w => w.profileId === 'abend' && w.profileName === 'Abend') && s.windows.some(w => w.profileId === 'alltag'));
+  r = await m.send({ type: 'openProfile', profileId: 'abend' });
+  await idle(m);
+  check('Erneutes Öffnen eines laufenden Profils ändert nichts', countUrl(m, M1) === 1 && r.result.created === 0);
+
+  title('Neustart mit zwei aktiven Profilen');
+  await sleep(1200);
+  const totalTwo = allTabs(m).length;
+  const m5 = m.restartWithRestore();
+  for (const id of [...m.wins.keys()]) m.user.closeWindow(id);
+  await idle(m);
+  m5.restoreLayout();
+  await startSW(m5, 'startup');
+  s = await idle(m5);
+  check('Beide Profile übernommen, keine Duplikate', eq(s.activeProfiles, ['alltag', 'abend']) && s.totals.present === 7 && allTabs(m5).length === totalTwo, { totals: s.totals, before: totalTwo, now: allTabs(m5).length });
+
+  title('Profil beenden');
+  r = await m5.send({ type: 'closeProfile', profileId: 'abend', closeTabs: true });
+  s = await idle(m5);
+  check('„Abend“ beendet: seine Pflicht-Tabs geschlossen, „Alltag“ unberührt', eq(s.activeProfiles, ['alltag']) && countUrl(m5, M1) === 0 && countUrl(m5, M2) === 0 && s.totals.present === 5 && countUrl(m5, P1) === 1, { active: s.activeProfiles, closed: r.result });
+  r = await m5.send({ type: 'closeProfile', profileId: 'alltag', closeTabs: true });
+  check('Das letzte aktive Profil lässt sich nicht beenden', r.ok === false && /Mindestens ein Profil/.test(r.error), r);
+
+  title('Profil beenden schließt nie das letzte Fenster');
+  await m5.send({ type: 'openProfile', profileId: 'abend' });
+  await idle(m5);
+  for (const g of ['Gaming', 'Recherche', 'Tools']) { const w = windowOfGroup(m5, g); if (w && m5.wins.has(w)) m5.user.closeWindow(w); }
+  await idle(m5);
+  const onlyAbend = m5.snapshot().every(w => w.tabs.every(t => t.group === 'Musik'));
+  r = await m5.send({ type: 'closeProfile', profileId: 'abend', closeTabs: true });
+  await idle(m5);
+  check('Ein Tab bleibt offen, Edge wird nicht beendet', onlyAbend && m5.wins.size >= 1 && r.result.keptOpen === 1, { onlyAbend, wins: m5.wins.size, result: r.result });
 
   title('Export/Import: Favoriten-HTML und Linkliste');
   const prof = validateConfig(cfg).config.profiles[0];

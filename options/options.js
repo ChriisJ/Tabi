@@ -309,23 +309,27 @@ function savedKeys() {
   return saved ? allIds(saved) : new Set();
 }
 
+// Aktive Profile auf diesem Gerät (mehrere gleichzeitig möglich).
+function activeIds() {
+  return liveStatus?.activeProfiles || (saved?.profiles?.[0] ? [saved.profiles[0].id] : []);
+}
 function activeId() {
-  return liveStatus?.activeProfile || saved?.profiles?.[0]?.id;
+  return activeIds()[0];
 }
 
 // ---------- Profilleiste ----------
 
 function renderProfiles() {
   const bar = $('profiles');
-  const active = activeId();
+  const active = new Set(activeIds());
   const savedIds = new Set((saved?.profiles || []).map(p => p.id));
   bar.replaceChildren(
     h('span', { class: 'pbar-label', text: 'Profile' }),
     ...draft.profiles.map(p => h('button', {
       type: 'button', role: 'tab', class: `ptab${p.id === cur().id ? ' sel' : ''}`, 'aria-selected': String(p.id === cur().id),
-      title: p.id === active ? 'Aktives Profil auf diesem Gerät' : 'Zum Bearbeiten anzeigen',
+      title: active.has(p.id) ? 'Läuft auf diesem Gerät' : 'Zum Bearbeiten anzeigen',
       onclick: () => { editPid = p.id; renderEditor(); }
-    }, p.id === active ? h('span', { class: 'pdot', 'aria-label': 'aktiv' }) : null, h('span', { class: 'ptxt', text: p.name || 'Ohne Namen' }),
+    }, active.has(p.id) ? h('span', { class: 'pdot', 'aria-label': 'aktiv' }) : null, h('span', { class: 'ptxt', text: p.name || 'Ohne Namen' }),
     !savedIds.has(p.id) ? h('span', { class: 'pnew', text: 'neu' }) : null)),
     h('button', { type: 'button', class: 'ptab add', title: 'Neues Profil', onclick: addProfile }, icon('plus'), 'Profil'));
 
@@ -338,15 +342,28 @@ function renderProfiles() {
     const label = $('profiles').querySelector('.ptab.sel .ptxt');
     if (label) label.textContent = v || 'Ohne Namen';
   });
-  const isActive = p.id === active;
+  const isActive = active.has(p.id);
+  const isSaved = savedIds.has(p.id);
+  const others = [...active].filter(id => id !== p.id);
   const head = $('profileHead');
+  const actions = [];
+  if (isActive) {
+    actions.push(h('span', { class: 'badge open', text: active.size > 1 ? 'läuft (mit weiteren Profilen)' : 'läuft auf diesem Gerät' }));
+    if (others.length) {
+      actions.push(h('button', { type: 'button', class: 'btn ghost', onclick: () => profileAction('close', p.id) }, 'Beenden'));
+      actions.push(h('button', { type: 'button', class: 'btn ghost', onclick: () => profileAction('only', p.id) }, 'Nur dieses'));
+    }
+  } else {
+    const hint = isSaved ? null : 'Erst speichern';
+    actions.push(h('button', { type: 'button', class: 'btn accent-soft', title: hint || 'Läuft zusätzlich in eigenen Fenstern', onclick: () => profileAction('open', p.id), disabled: !isSaved }, 'Zusätzlich öffnen'));
+    actions.push(h('button', { type: 'button', class: 'btn ghost', title: hint || 'Andere Profile beenden', onclick: () => profileAction('only', p.id), disabled: !isSaved }, 'Nur dieses aktivieren'));
+  }
   head.replaceChildren(
     name,
-    isActive ? h('span', { class: 'badge open', text: 'aktiv auf diesem Gerät' })
-      : h('button', { type: 'button', class: 'btn accent-soft', onclick: () => activateProfile(p.id), disabled: !savedIds.has(p.id) }, 'Dieses Profil aktivieren'),
+    ...actions,
     h('span', { class: 'grp-spacer' }),
     iconBtn('copy', 'Profil duplizieren', () => duplicateProfile(p.id)),
-    iconBtn('trash', isActive ? 'Das aktive Profil kann nicht gelöscht werden' : 'Profil löschen', () => removeProfile(p.id), { class: 'danger', disabled: isActive || draft.profiles.length < 2 }));
+    iconBtn('trash', isActive ? 'Ein laufendes Profil kann nicht gelöscht werden – erst beenden' : 'Profil löschen', () => removeProfile(p.id), { class: 'danger', disabled: isActive || draft.profiles.length < 2 }));
 }
 
 function addProfile() {
@@ -399,17 +416,37 @@ function removeProfile(pid) {
   toast(`Profil „${p.name}“ entfernt.`, { label: 'Rückgängig', run: undo });
 }
 
-async function activateProfile(pid) {
-  if (isDirty()) { toast('Bitte zuerst speichern – aktiviert wird die gespeicherte Fassung.'); return; }
+/**
+ * open  – Profil zusätzlich in eigenen Fenstern starten
+ * close – Profil beenden (optional seine Pflicht-Tabs schließen)
+ * only  – nur dieses Profil aktiv lassen (optional Pflicht-Tabs der anderen schließen)
+ */
+async function profileAction(kind, pid) {
+  if (isDirty()) { toast('Bitte zuerst speichern – gestartet wird die gespeicherte Fassung.'); return; }
   const p = draft.profiles.find(x => x.id === pid);
-  const closeOld = confirm(`Profil „${p.name}“ aktivieren.\n\nSollen die Pflicht-Tabs des bisherigen Profils dabei geschlossen werden?\n\nOK = schließen · Abbrechen = offen lassen (deine eigenen Tabs bleiben in jedem Fall offen)`);
+  let msg;
+  if (kind === 'open') {
+    msg = { type: 'openProfile', profileId: pid };
+  } else if (kind === 'close') {
+    const closeTabs = confirm(`Profil „${p.name}“ beenden.\n\nSollen seine Pflicht-Tabs dabei geschlossen werden?\n\nOK = schließen · Abbrechen = offen lassen (ungeschützt). Deine eigenen Tabs bleiben in jedem Fall offen.`);
+    msg = { type: 'closeProfile', profileId: pid, closeTabs };
+  } else {
+    const closeOld = confirm(`Nur „${p.name}“ aktiv lassen.\n\nSollen die Pflicht-Tabs der anderen Profile geschlossen werden?\n\nOK = schließen · Abbrechen = offen lassen (ungeschützt). Deine eigenen Tabs bleiben in jedem Fall offen.`);
+    msg = { type: 'switchProfile', profileId: pid, closeOld };
+  }
   try {
-    const res = await send({ type: 'switchProfile', profileId: pid, closeOld });
+    const res = await send(msg);
     liveStatus = res.status;
     const r = res.result || {};
-    toast(`Profil „${p.name}“ aktiv: ${r.created || 0} Tab(s) geöffnet${r.windows ? `, ${r.windows} Fenster` : ''}${r.closed ? `, ${r.closed} alte geschlossen` : ''}.`);
+    const parts = [];
+    if (r.created) parts.push(`${r.created} Tab(s) geöffnet`);
+    if (r.windows) parts.push(`${r.windows} Fenster`);
+    if (r.closed) parts.push(`${r.closed} Tab(s) geschlossen`);
+    if (r.keptOpen) parts.push('ein Tab blieb offen, damit Edge nicht beendet wird');
+    const verb = kind === 'open' ? 'läuft jetzt zusätzlich' : kind === 'close' ? 'wurde beendet' : 'ist jetzt das einzige aktive Profil';
+    toast(`Profil „${p.name}“ ${verb}${parts.length ? `: ${parts.join(', ')}` : ''}.`);
   } catch (e) {
-    toast(`Profilwechsel fehlgeschlagen: ${e.message}`);
+    toast(`Aktion fehlgeschlagen: ${e.message}`);
   }
   renderEditor();
 }
@@ -564,7 +601,7 @@ function setProtect(t, on) {
 
 function applyLive() {
   const { wins, tabs } = liveMaps();
-  const inactive = liveStatus && cur().id !== liveStatus.activeProfile;
+  const inactive = liveStatus && !activeIds().includes(cur().id);
   for (const el of document.querySelectorAll('[data-live-win]')) {
     const key = el.dataset.liveWin;
     if (inactive && el.textContent !== 'neu') { el.className = 'badge closed'; el.textContent = 'Profil nicht aktiv'; continue; }
@@ -1190,7 +1227,7 @@ async function loadStored() {
   draft = clone(saved);
   bind = emptyBind();
   undoStack = [];
-  if (!editPid || !draft.profiles.some(p => p.id === editPid)) editPid = res.activeProfile || draft.profiles[0].id;
+  if (!editPid || !draft.profiles.some(p => p.id === editPid)) editPid = res.activeProfiles?.[0] || res.activeProfile || draft.profiles[0].id;
   renderEditor();
   if (!res.valid) toast('Die gespeicherte Vorlage ist ungültig – bitte die markierten Stellen korrigieren.');
 }

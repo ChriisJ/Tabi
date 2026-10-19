@@ -146,7 +146,7 @@ Tabi übernimmt solche Vorlagen beim Laden, beim Import und aus dem Sync automat
 ## Was nicht in der Vorlage steht
 
 Diese Daten speichert Tabi **pro Gerät** (`chrome.storage.local`). Sie werden nicht synchronisiert und nicht exportiert:
-- welches Profil aktiv ist (`activeProfile`)
+- welche Profile auf dem Gerät laufen (`activeProfiles`, Liste; bis 0.4.x ein einzelnes `activeProfile`)
 - Schutz an/aus (`enabled`)
 - zuletzt gesehene URLs und Gruppentitel zur Wiedererkennung (`hints`)
 - Gerätename und Sync-Status (`sync`, `syncState`)

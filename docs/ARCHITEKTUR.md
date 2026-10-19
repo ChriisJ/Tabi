@@ -1,6 +1,6 @@
 # Architektur
 
-Stand: Version 0.4.0 · [Zurück zur Übersicht](../README.md)
+Stand: Version 0.4.0 + unveröffentlichte Änderungen ([Changelog](../CHANGELOG.md#unveröffentlicht)) · [Zurück zur Übersicht](../README.md)
 
 1. [Machbarkeit](#1-machbarkeit)
 2. [Aufbau](#2-aufbau)
@@ -45,7 +45,7 @@ manifest.json
 background.js ─────────────── Service-Worker (ES-Modul), gesamte Logik
  ├─ lib/config.js             Vorlagenformat, Beispiel, Validierung, Migration 1→2, flattenConfig()
  └─ lib/sync.js               Zerlegen/Zusammensetzen/Prüfen der Vorlage für storage.sync
-popup/                        Status, Profilwechsel, Schutz an/aus, Wiederherstellen
+popup/                        Status, Profile an/aus, Schutz an/aus, Wiederherstellen
 options/
  ├─ options.js                Editor (Profile, Fenster, Gruppen, Tabs), Dialoge, Sync-Karte
  └─ transfer.js               Favoriten-HTML und Linkliste lesen/schreiben
@@ -53,7 +53,7 @@ ui/common.css                 gemeinsame Farben (hell/dunkel), Edge-Gruppenfarbe
 ```
 
 Popup und Einstellungen sprechen ausschließlich per `chrome.runtime.sendMessage` mit dem Service-Worker:
-`getStatus`, `setEnabled`, `restoreNow`, `getConfig`, `saveConfig {config, apply, bind}`, `switchProfile {profileId, closeOld}`, `captureSession`, `setSync {enabled, deviceName, choice}`, `syncNow`, `getLog`, `clearLog`.
+`getStatus`, `setEnabled`, `restoreNow`, `getConfig`, `saveConfig {config, apply, bind}`, `switchProfile {profileId, closeOld}`, `openProfile {profileId}`, `closeProfile {profileId, closeTabs}`, `captureSession`, `setSync {enabled, deviceName, choice}`, `syncNow`, `getLog`, `clearLog`.
 Nachrichten werden nur von der eigenen Erweiterung angenommen (`sender.id`).
 
 ### Grundentscheidungen
@@ -73,7 +73,7 @@ Nachrichten werden nur von der eigenen Erweiterung angenommen (`sender.id`).
 |---|---|---|---|
 | `storage.local` | `config` | Vorlage (Format 2, wie gespeichert) | dauerhaft |
 | | `configRev` | Revision. `0` heißt unveränderte Beispielvorlage, die nie automatisch aufgebaut wird. Sonst Zeitstempel der Speicherung. | dauerhaft |
-| | `activeProfile` | aktives Profil auf diesem Gerät | dauerhaft |
+| | `activeProfiles` | auf diesem Gerät laufende Profile (Liste; bis 0.4.x `activeProfile`) | dauerhaft |
 | | `enabled` | Schutz an/aus | dauerhaft |
 | | `hints` | `tabs[key].lastUrl`, `groups[key].lastTitle` zur Wiedererkennung | dauerhaft |
 | | `sync`, `syncState` | Geräte-ID und -name, Sync an/aus, letzter Up-/Download, Fehler, offene Auswahl | dauerhaft |
@@ -84,7 +84,7 @@ Nachrichten werden nur von der eigenen Erweiterung angenommen (`sender.id`).
 
 | Situation | Erkennung | Verhalten |
 |---|---|---|
-| **Browserstart** | `runtime.onStartup` | Warten, bis die Sitzung ruhig ist (siehe 5). Neuere Vorlage aus dem Sync übernehmen, vorhandene Tabs zuordnen, fehlende Fenster, Gruppen und Tabs des aktiven Profils ergänzen. Bei Schutz aus oder `configRev = 0` nur zuordnen. |
+| **Browserstart** | `runtime.onStartup` | Warten, bis die Sitzung ruhig ist (siehe 5). Neuere Vorlage aus dem Sync übernehmen, vorhandene Tabs zuordnen, fehlende Fenster, Gruppen und Tabs aller aktiven Profile ergänzen. Bei Schutz aus oder `configRev = 0` nur zuordnen. |
 | **Installation** | `onInstalled: install` | Wie Browserstart. Gibt es keine Vorlage (auch nicht im Sync), öffnen sich die Einstellungen. |
 | **Update / Neu laden** | `onInstalled: update` | `storage.session` ist leer. Offene Tabs werden zugeordnet, **nichts geöffnet**. |
 | **Browser-Update** | `onInstalled: chrome_update` | ignoriert, `onStartup` übernimmt |
@@ -130,11 +130,22 @@ Tab- und Gruppen-IDs ändern sich bei jedem Browserstart. Tabi ordnet konservati
 - Das Popup zeigt „außerhalb der Gruppe“. Nur „Vorlage wiederherstellen“ holt solche Tabs zurück.
 - Wird ein verschobener Tab einzeln geschlossen, öffnet Tabi ihn in seiner Vorlagengruppe neu. Wird sein Fenster geschlossen, passiert nichts.
 
-### Profilwechsel (`switchProfile`)
-1. Laufzeitzuordnung leeren. Die alten Tabs bleiben offen und sind unverwaltet.
-2. Das aktive Profil lokal speichern, `flat` neu bilden.
-3. Zuordnen (unscharf erlaubt, da die Zuordnung leer ist), dann das neue Profil aufbauen.
-4. Optional die alten Pflicht-Tabs schließen, außer denen, die das neue Profil übernommen hat. Erst nach dem Aufbau, damit immer ein Fenster offen bleibt.
+### Mehrere aktive Profile (`setActiveProfiles`)
+Mehrere Profile können gleichzeitig laufen. `flattenConfig(config, activeProfiles)` vereinigt sie zu **einer** Nachschlagetabelle (`flat`). Das ist möglich, weil IDs über alle Profile eindeutig sind. Jeder Eintrag kennt sein `profileId`. Fenster, Gruppen und Tabs der Profile sind getrennt, deshalb läuft jedes Profil in eigenen Fenstern. Lebenszyklus, Reparatur und Schleifenschutz behandeln alle aktiven Profile gemeinsam.
+
+Alle Profilaktionen laufen über `setActiveProfiles(nextIds, closeRemoved)`:
+
+| Nachricht | Bedeutung |
+|---|---|
+| `openProfile {profileId}` | aktive Profile + dieses |
+| `closeProfile {profileId, closeTabs}` | aktive Profile − dieses |
+| `switchProfile {profileId, closeOld}` | nur dieses |
+
+Ablauf:
+1. Mindestens ein Profil muss übrig bleiben, sonst wird die Aktion abgelehnt. Die Reihenfolge folgt der Vorlage.
+2. Tab-IDs der zu beendenden Profile merken, dann `activeProfiles` speichern, `flat` neu bilden und die Zuordnungen beendeter Profile lösen. Ihre Tabs bleiben vorerst offen.
+3. Hinzugekommene Profile zuordnen, wobei für ihre Gruppen die unscharfe Wiedererkennung erlaubt ist (`fuzzyKeys`). Dann nur **ihre** Fenster, Gruppen und Tabs aufbauen (`reconcile` mit `onlyKeys`).
+4. Optional die Pflicht-Tabs beendeter Profile schließen, außer denen, die ein aktives Profil übernommen hat. Erst nach dem Aufbau, und nie alle Tabs aller Fenster: Bliebe nichts übrig, bleibt ein Tab offen (`keptOpen`).
 
 ### Sync
 - **Hochladen** bei jedem Speichern, in **einem** `set()`-Aufruf. Überzählige alte Stücke werden danach entfernt.
