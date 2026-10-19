@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Tabi – Store-Screenshot</title>
+<link rel="stylesheet" href="brand.css">
+<style>
+  /* 1280 × 800. Die echte Oberfläche läuft im iframe (gegen die simulierte chrome-API aus tests/). */
+  html, body { width: 1280px; height: 800px; }
+  .stage { padding: 34px 50px 0; display: flex; flex-direction: column; }
+  .cap { display: flex; align-items: center; gap: 18px; margin-bottom: 22px; }
+  .cap img { width: 54px; height: 54px; flex: none; }
+  .headline { font-size: 34px; }
+  .sub { font-size: 18px; margin-top: 4px; }
+  .frame {
+    flex: 1; background: #fff; border-radius: 14px 14px 0 0; overflow: hidden; border: 1px solid #d6dee8; border-bottom: 0;
+    box-shadow: 0 20px 50px rgba(15, 40, 80, .16);
+    display: flex; flex-direction: column;
+  }
+  .chrome { height: 38px; background: #eef2f7; display: flex; align-items: center; gap: 10px; padding: 0 14px; flex: none; }
+  .chrome .dots { display: flex; gap: 6px; }
+  .chrome .dots i { width: 10px; height: 10px; border-radius: 50%; background: #c9d3de; display: block; }
+  .chrome .url { flex: 1; max-width: 520px; height: 24px; border-radius: 12px; background: #fff; font-size: 12px; color: #6b7a89; display: flex; align-items: center; padding: 0 12px; }
+  iframe { border: 0; width: 100%; flex: 1; display: block; }
+
+  /* Popup-Variante: Text links, Popup rechts über stilisierten Fenstern */
+  body.popup .stage { flex-direction: row; align-items: center; gap: 60px; padding: 0 80px; }
+  body.popup .left { flex: 1; }
+  body.popup .cap { display: block; }
+  body.popup .cap img { width: 72px; height: 72px; margin-bottom: 22px; }
+  body.popup .headline { font-size: 46px; }
+  body.popup .sub { font-size: 21px; margin-top: 14px; max-width: 520px; }
+  body.popup .pop {
+    width: 372px; height: 640px; flex: none; background: #fff; border-radius: 12px; overflow: hidden;
+    border: 1px solid #d6dee8; box-shadow: 0 30px 70px rgba(15, 40, 80, .25);
+  }
+  body.popup .frame { display: none; }
+  ul.points { margin-top: 26px; list-style: none; display: grid; gap: 12px; font-size: 19px; color: var(--ink); }
+  ul.points li { display: flex; gap: 10px; align-items: baseline; }
+  ul.points li::before { content: ""; width: 10px; height: 10px; border-radius: 3px; background: var(--blue); flex: none; transform: translateY(-2px); }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="left">
+      <div class="cap">
+        <img src="../assets/logo-300.png" alt="">
+        <div>
+          <div class="headline" id="h"></div>
+          <div class="sub" id="s"></div>
+        </div>
+      </div>
+      <ul class="points" id="pts" hidden></ul>
+    </div>
+    <div class="frame">
+      <div class="chrome"><div class="dots"><i></i><i></i><i></i></div><div class="url">Tabi – Vorlage</div></div>
+      <iframe id="app" title="Tabi"></iframe>
+    </div>
+  </div>
+  <script>
+    const q = new URLSearchParams(location.search);
+    const view = q.get('view') || 'overview';
+    const lang = q.get('lang') === 'en' ? 'en' : 'de';
+    const T = {
+      overview: {
+        de: ['Fenster, Gruppen und Tabs festlegen', 'Visueller Editor mit Edge-Gruppenfarben, Drag & Drop und mehreren Profilen.'],
+        en: ['Define windows, groups and tabs', 'Visual editor with Edge group colors, drag & drop and multiple profiles.']
+      },
+      capture: {
+        de: ['Einmal einrichten, als Standard speichern', 'Die aktuelle Sitzung übernehmen – offene Tabs werden direkt verknüpft, nichts öffnet doppelt.'],
+        en: ['Set it up once, save as default', 'Capture your current session – open tabs are linked directly, nothing opens twice.']
+      },
+      import: {
+        de: ['Favoriten und Linklisten importieren', 'Edge-Favoritenordner werden zu Gruppen. Export als JSON, Favoriten-HTML oder Linkliste.'],
+        en: ['Import favorites and link lists', 'Edge favorite folders become tab groups. Export as JSON, favorites HTML or link list.']
+      },
+      color: {
+        de: ['Farben, Namen und Schutz', 'Edge-Gruppenfarben wählen. 🔒 Geschützte Tabs kommen sofort zurück, 🔓 freie dürfen geschlossen bleiben.'],
+        en: ['Colors, names and protection', 'Pick Edge group colors. 🔒 Protected tabs come right back, 🔓 free tabs may stay closed.']
+      },
+      popup: {
+        de: ['Mehrere Profile gleichzeitig', 'Jedes Profil läuft in eigenen Fenstern – per Schalter an und aus.'],
+        en: ['Multiple profiles at once', 'Each profile runs in its own windows – switch them on and off.']
+      }
+    };
+    const P = {
+      de: ['Fehlende Tabs auf einen Blick', 'Vorlage jederzeit wiederherstellen', 'Kein Konflikt mit der Sitzungswiederherstellung', 'Keine Telemetrie, keine Datenübertragung'],
+      en: ['Missing tabs at a glance', 'Restore the template any time', 'Works with Edge session restore', 'No telemetry, no data leaves your browser']
+    };
+    const [h, s] = (T[view] || T.overview)[lang];
+    document.getElementById('h').textContent = h;
+    document.getElementById('s').textContent = s;
+    const app = document.getElementById('app');
+    if (view === 'popup') {
+      document.body.classList.add('popup');
+      const pts = document.getElementById('pts');
+      pts.hidden = false;
+      for (const p of P[lang]) { const li = document.createElement('li'); li.textContent = p; pts.append(li); }
+      const pop = document.createElement('div');
+      pop.className = 'pop';
+      const f = document.createElement('iframe');
+      f.src = '../../tests/popup.html?both';
+      f.style.cssText = 'width:100%;height:100%;border:0';
+      pop.append(f);
+      document.querySelector('.stage').append(pop);
+    } else {
+      app.src = `../../tests/ui.html?shot=${view}`;
+    }
+  </script>
+</body>
+</html>

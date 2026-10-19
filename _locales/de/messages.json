@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "Tabi – Tab-Vorlagen & geschützte Tabs",
+    "description": "Name der Erweiterung (max. 75 Zeichen)"
+  },
+  "extDescription": {
+    "message": "Feste Fenster, native Tab-Gruppen und geschützte Tabs: Geschlossene Pflicht-Tabs öffnen sich wieder. Mit Profilen und Sync.",
+    "description": "Kurzbeschreibung (max. 132 Zeichen)"
+  },
+  "actionTitle": {
+    "message": "Tabi – Tab-Vorlage",
+    "description": "Tooltip des Symbols"
+  }
+}

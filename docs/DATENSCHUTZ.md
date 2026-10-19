@@ -1,6 +1,6 @@
 # Datenschutz
 
-Stand: Version 0.4.0 · [Zurück zur Übersicht](../README.md)
+Stand: Version 0.5.0 · [Zurück zur Übersicht](../README.md) · [English version](PRIVACY.md)
 
 **Kurz:** Tabi sendet keine Daten an den Entwickler oder an Dritte. Es gibt keine Telemetrie, keine Werbung, keine Netzwerkzugriffe und keine extern nachgeladenen Skripte. Daten liegen nur in deinem Browser und, wenn du Sync nutzt, in deinem eigenen Edge-Konto.
 

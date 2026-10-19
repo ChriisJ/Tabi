@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Tabi – große Kachel</title>
+<link rel="stylesheet" href="brand.css">
+<style>
+  /* 1400 × 560 */
+  html, body { width: 1400px; height: 560px; }
+  .stage { display: grid; grid-template-columns: 600px 1fr; align-items: center; padding: 0 70px; gap: 40px; }
+  .brand { display: flex; align-items: center; gap: 18px; margin-bottom: 26px; }
+  .brand img { width: 76px; height: 76px; }
+  .brand span { font-size: 40px; font-weight: 800; letter-spacing: -0.03em; }
+  .headline { font-size: 50px; margin-bottom: 18px; }
+  .sub { font-size: 22px; max-width: 560px; }
+  .art { position: relative; height: 420px; }
+  .w1 { position: absolute; left: 0; top: 30px; width: 560px; }
+  .w2 { position: absolute; left: 190px; top: 190px; width: 500px; }
+  .lock {
+    position: absolute; right: 18px; top: 4px; width: 92px; height: 92px; border-radius: 50%; background: var(--blue);
+    display: grid; place-items: center; box-shadow: 0 14px 30px rgba(15, 108, 189, .35);
+  }
+  .tag-prof { position: absolute; font-size: 13px; font-weight: 700; color: #fff; background: var(--ink); padding: 4px 10px; border-radius: 999px; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div>
+      <div class="brand"><img src="../assets/logo-300.png" alt=""><span>Tabi</span></div>
+      <div class="headline" data-de="Deine Tabs.<br>Immer an ihrem Platz." data-en="Your tabs.<br>Always in place."></div>
+      <div class="sub" data-de="Feste Fenster mit nativen Edge-Gruppen. Geschlossene Pflicht-Tabs kommen sofort zurück – mit Profilen, Sync und Import." data-en="Fixed windows with native Edge tab groups. Closed must-have tabs come right back – with profiles, sync and import."></div>
+    </div>
+    <div class="art">
+      <div class="win w1">
+        <div class="bar">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <span class="chip" style="background: var(--g-blue)" data-de="Arbeit" data-en="Work"></span>
+          <div class="tab" style="--c: var(--g-blue)"><b></b>Mail</div>
+          <div class="tab dim" style="--c: var(--g-blue)"><b></b><span data-de="Kalender" data-en="Calendar"></span></div>
+          <span class="chip" style="background: var(--g-green)" data-de="Recherche" data-en="Research"></span>
+          <div class="tab dim" style="--c: var(--g-green)"><b></b>Wiki</div>
+        </div>
+        <div class="body"><div class="line" style="width: 70%"></div><div class="line" style="width: 90%"></div><div class="line" style="width: 55%"></div><div class="line" style="width: 80%"></div></div>
+      </div>
+      <div class="win w2">
+        <div class="bar">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <span class="chip" style="background: var(--g-purple)">Dev</span>
+          <div class="tab" style="--c: var(--g-purple)"><b></b>Repo</div>
+          <div class="tab dim" style="--c: var(--g-purple)"><b></b>CI</div>
+          <span class="chip" style="background: var(--g-orange)">Tools</span>
+        </div>
+        <div class="body"><div class="line" style="width: 60%"></div><div class="line" style="width: 85%"></div><div class="line" style="width: 40%"></div></div>
+      </div>
+      <span class="tag-prof" style="left: 14px; top: 0" data-de="Profil „Standard“" data-en="Profile “Standard”"></span>
+      <span class="tag-prof" style="left: 204px; top: 160px" data-de="Profil „Dev“" data-en="Profile “Dev”"></span>
+      <div class="lock">
+        <svg width="46" height="52" viewBox="0 0 46 52"><path d="M11 22 v-7 a12 12 0 0 1 24 0 v7" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/><rect x="4" y="21" width="38" height="28" rx="7" fill="#fff"/><circle cx="23" cy="33" r="4" fill="#0f6cbd"/><rect x="21" y="34" width="4" height="8" rx="2" fill="#0f6cbd"/></svg>
+      </div>
+    </div>
+  </div>
+  <script src="lang.js"></script>
+</body>
+</html>

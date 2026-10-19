@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Tabi Logo</title>
+<link rel="stylesheet" href="brand.css">
+<style>
+  html, body { background: transparent; }
+  body { width: 300px; height: 300px; }
+</style>
+</head>
+<body>
+<!-- 300 × 300: Tabi-Logo für den Store (1:1). Drei Tabs in Gruppenfarben, Schloss = geschützt. -->
+<svg class="logo-mark" width="300" height="300" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a86f0"/>
+      <stop offset="1" stop-color="#0b5aa8"/>
+    </linearGradient>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#062b52" flood-opacity=".35"/>
+    </filter>
+  </defs>
+  <rect x="10" y="10" width="280" height="280" rx="64" fill="url(#bg)"/>
+  <!-- Fensterkörper -->
+  <rect x="52" y="104" width="196" height="132" rx="16" fill="#ffffff" filter="url(#sh)"/>
+  <!-- Tabs (Gruppenfarben) -->
+  <path d="M58 108 v-26 a12 12 0 0 1 12 -12 h40 a12 12 0 0 1 12 12 v26 z" fill="#ffffff"/>
+  <rect x="58" y="70" width="64" height="7" rx="3.5" fill="#1a73e8"/>
+  <path d="M128 108 v-22 a10 10 0 0 1 10 -10 h34 a10 10 0 0 1 10 10 v22 z" fill="#dcebfb"/>
+  <rect x="128" y="76" width="54" height="6" rx="3" fill="#1e8e3e"/>
+  <path d="M188 108 v-22 a10 10 0 0 1 10 -10 h30 a10 10 0 0 1 10 10 v22 z" fill="#dcebfb"/>
+  <rect x="188" y="76" width="50" height="6" rx="3" fill="#fa903e"/>
+  <!-- Inhalt -->
+  <rect x="74" y="128" width="104" height="12" rx="6" fill="#dbe5f0"/>
+  <rect x="74" y="150" width="72" height="12" rx="6" fill="#e8eef5"/>
+  <!-- Schloss -->
+  <g transform="translate(176 150)" filter="url(#sh)">
+    <circle cx="34" cy="34" r="40" fill="#0f6cbd"/>
+    <path d="M20 32 v-7 a14 14 0 0 1 28 0 v7" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+    <rect x="13" y="31" width="42" height="31" rx="7" fill="#fff"/>
+    <circle cx="34" cy="44" r="4.5" fill="#0f6cbd"/>
+    <rect x="31.8" y="45" width="4.4" height="9" rx="2" fill="#0f6cbd"/>
+  </g>
+</svg>
+</body>
+</html>

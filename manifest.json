@@ -1,9 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "Tabi – Tab-Vorlage",
+  "name": "__MSG_extName__",
   "short_name": "Tabi",
-  "version": "0.4.0",
-  "description": "Stellt eine feste Vorlage aus Fenstern, nativen Registerkartengruppen und Pflicht-Tabs her und öffnet versehentlich geschlossene Pflicht-Tabs wieder.",
+  "version": "0.5.0",
+  "description": "__MSG_extDescription__",
+  "default_locale": "de",
+  "homepage_url": "https://github.com/ChriisJ/Tabi",
   "minimum_chrome_version": "116",
   "incognito": "not_allowed",
   "permissions": ["tabs", "tabGroups", "storage"],
@@ -12,7 +14,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "Tabi – Tab-Vorlage",
+    "default_title": "__MSG_actionTitle__",
     "default_popup": "popup/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",

@@ -18,14 +18,19 @@
   window.__mock = mock;
   const cfg = structuredClone(DEFAULT_CONFIG);
   cfg.profiles[0].windows[0].groups[0].tabs[2].protect = false;
-  cfg.profiles.push({ id: 'abend', name: 'Abend', windows: [{ id: 'abend-w', name: 'Entspannen', groups: [
-    { id: 'musik', title: 'Musik', color: 'pink', tabs: [{ id: 'm1', url: 'https://music.example.com/' }] }] }] });
+  cfg.profiles.push({ id: 'dev', name: 'Dev', windows: [{ id: 'dev-w', name: 'Entwicklung', groups: [
+    { id: 'code', title: 'Code', color: 'purple', tabs: [{ id: 'd1', url: 'https://git.example.dev/tabi' }, { id: 'd2', url: 'https://ci.example.dev/builds' }] }] }] });
   mock.store.local.config = cfg;
   mock.store.local.configRev = Date.now();
   mock.user.openWindow(['edge://newtab/']);
   await import(`../background.js?p=${Date.now()}`);
   mock.fire.startup();
   await new Promise(r => setTimeout(r, 3500));
+  // ?both: beide Profile laufen (für Store-Screenshots)
+  if (new URLSearchParams(location.search).has('both')) {
+    await new Promise(r => mock.chrome.runtime.sendMessage({ type: 'openProfile', profileId: 'dev' }, r));
+    await new Promise(r => setTimeout(r, 300));
+  }
 
   const html = await (await fetch('../popup/popup.html')).text();
   const doc = new DOMParser().parseFromString(html, 'text/html');

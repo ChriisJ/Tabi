@@ -1,6 +1,6 @@
 # Bedienung
 
-Stand: Version 0.4.0 + unveröffentlichte Änderungen ([Changelog](../CHANGELOG.md#unveröffentlicht)) · [Zurück zur Übersicht](../README.md)
+Stand: Version 0.5.0 · [Zurück zur Übersicht](../README.md)
 
 - [Installation](#installation)
 - [Edge-Einstellungen](#edge-einstellungen)

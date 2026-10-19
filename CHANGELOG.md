@@ -6,14 +6,22 @@ Kategorien: **Neu** · **Geändert** · **Behoben** · **Entfernt** · **Sicherh
 
 ## [Unveröffentlicht]
 
+_Noch nichts._
+
+## [0.5.0] – 2026-10-20
+
 ### Neu
 - **Mehrere Profile gleichzeitig:** Profile können parallel laufen, jedes in seinen **eigenen Fenstern** und jedes geschützt, z. B. „Standard“ und „Dev“ nebeneinander.
   - **Popup:** Jedes Profil hat einen Schalter. Einschalten öffnet das Profil zusätzlich. Ausschalten beendet es, wahlweise mit Schließen seiner Pflicht-Tabs. „nur dieses“ beendet alle anderen.
   - **Editor:** „Zusätzlich öffnen“, „Nur dieses aktivieren“ und „Beenden“ im Profilkopf. Alle laufenden Profile sind in der Profilleiste mit ● markiert.
   - Das Popup gruppiert die Fenster nach Profil, wenn mehrere laufen.
 - Beim Öffnen eines Profils werden dessen bereits offene Gruppen wiedererkannt statt doppelt geöffnet.
+- **Vorbereitung für Microsoft Edge-Add-ons:** Store-Unterlagen in `store/` (Texte Deutsch/Englisch, Datenschutz-Angaben, Hinweise für die Prüfer), Logo, Promo-Kacheln und Screenshots. `tools/store-assets.ps1` erzeugt sie neu aus der echten Oberfläche.
+- Englische Datenschutzerklärung `docs/PRIVACY.md`.
+- Name und Kurzbeschreibung der Erweiterung auf Deutsch und Englisch (`_locales`). Edge zeigt sie passend zur Browsersprache an. Die Oberfläche selbst bleibt vorerst deutsch.
 
 ### Geändert
+- Erweiterungsname jetzt „Tabi – Tab-Vorlagen & geschützte Tabs“. Die Kurzbeschreibung ist auf die erlaubten 132 Zeichen gekürzt.
 - Statt eines aktiven Profils speichert jedes Gerät jetzt eine **Liste aktiver Profile** (`activeProfiles`). Die Einstellung aus 0.4.x wird automatisch übernommen.
 - Ein laufendes Profil kann nicht gelöscht werden. Erst beenden.
 
@@ -96,7 +104,8 @@ Kategorien: **Neu** · **Geändert** · **Behoben** · **Entfernt** · **Sicherh
 - Popup mit Status, Schutz an/aus und „Vorlage jetzt wiederherstellen“. Einstellungen mit JSON-Editor, Validierung, Export/Import und Debug-Protokoll.
 - Logiktests gegen eine simulierte chrome-API (`tests/run.html`).
 
-[Unveröffentlicht]: https://github.com/ChriisJ/Tabi/compare/v0.4.0...HEAD
+[Unveröffentlicht]: https://github.com/ChriisJ/Tabi/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/ChriisJ/Tabi/releases/tag/v0.5.0
 [0.4.0]: https://github.com/ChriisJ/Tabi/releases/tag/v0.4.0
 [0.3.0]: https://github.com/ChriisJ/Tabi/blob/main/CHANGELOG.md#030--2026-10-19
 [0.2.0]: https://github.com/ChriisJ/Tabi/blob/main/CHANGELOG.md#020--2026-10-19

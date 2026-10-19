@@ -1,6 +1,6 @@
 # Tabi – Tab-Vorlagen und geschützte Tabs für Microsoft Edge
 
-[![Version](https://img.shields.io/badge/version-0.4.0-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.5.0-blue)](CHANGELOG.md)
 ![Manifest V3](https://img.shields.io/badge/Manifest-V3-green)
 ![Edge](https://img.shields.io/badge/Microsoft%20Edge-Chromium-0078D7)
 [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-yellow)](LICENSE)
@@ -51,14 +51,15 @@ Empfohlene Edge-Einstellung: *Beim Start → Registerkarten aus der vorherigen S
 | [Architektur](docs/ARCHITEKTUR.md) | Machbarkeit, Aufbau, Lebenszyklus, Wiedererkennung, bekannte Grenzen |
 | [Testplan](docs/TESTPLAN.md) | Manuelle Tests in Edge und automatisierte Logiktests |
 | [Entwicklung & Release](docs/ENTWICKLUNG.md) | Projektstruktur, Debugging, Tests, Versionierung, Veröffentlichung |
-| [Datenschutz](docs/DATENSCHUTZ.md) | Welche Daten Tabi wo speichert |
+| [Datenschutz](docs/DATENSCHUTZ.md) · [Privacy (EN)](docs/PRIVACY.md) | Welche Daten Tabi wo speichert |
+| [Store-Einreichung](store/EINREICHUNG.md) | Unterlagen und Texte für Microsoft Edge-Add-ons |
 | [Changelog](CHANGELOG.md) | Patchnotes aller Versionen |
 
 ---
 
 ## Status
 
-Tabi ist in **früher Entwicklung (0.x)**. Die Logik ist mit einer simulierten Browser-API automatisiert getestet (106 Prüfungen). Der vollständige Test in echtem Edge steht noch aus, siehe [Testplan](docs/TESTPLAN.md). Fehler und Wünsche bitte als [Issue](https://github.com/ChriisJ/Tabi/issues) melden.
+Tabi ist in **früher Entwicklung (0.x)** und läuft im Alltag in Edge. Die Logik ist zusätzlich mit einer simulierten Browser-API automatisiert getestet (116 Prüfungen). Die systematischen Einzeltests in Edge stehen noch aus, siehe [Testplan](docs/TESTPLAN.md). Die Einreichung bei Microsoft Edge-Add-ons ist vorbereitet. Fehler und Wünsche bitte als [Issue](https://github.com/ChriisJ/Tabi/issues) melden.
 
 **Bekannte Einschränkungen (Auszug):** Ein wieder geöffneter Tab startet auf seiner Start-URL ohne Zurück-Verlauf. Ob der Sync bei *entpackten* Erweiterungen zwischen Geräten funktioniert, ist von Microsoft nicht dokumentiert. Vollständige Liste: [Architektur → Bekannte Grenzen](docs/ARCHITEKTUR.md#8-bekannte-grenzen).
 

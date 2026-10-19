@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "Tabi – Tab templates & protected tabs",
+    "description": "Extension name (max. 75 characters)"
+  },
+  "extDescription": {
+    "message": "Fixed windows, native tab groups and protected tabs: closed must-have tabs reopen automatically. With profiles and sync.",
+    "description": "Short description (max. 132 characters)"
+  },
+  "actionTitle": {
+    "message": "Tabi – tab template",
+    "description": "Toolbar icon tooltip"
+  }
+}

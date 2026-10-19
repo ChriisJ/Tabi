@@ -17,8 +17,10 @@
   const { DEFAULT_CONFIG } = await import('../lib/config.js');
   mock.store.local.config = structuredClone(DEFAULT_CONFIG);
   mock.store.local.config.profiles[0].windows[0].groups[0].tabs[2].protect = false;
-  mock.store.local.config.profiles.push({ id: 'abend', name: 'Abend', windows: [{ id: 'abend-w', name: 'Entspannen', groups: [
-    { id: 'musik', title: 'Musik', color: 'pink', collapsed: false, tabs: [{ id: 'm1', url: 'https://music.example.com/' }, { id: 'm2', url: 'https://video.example.org/' }] }] }] });
+  mock.store.local.config.profiles.push({ id: 'dev', name: 'Dev', windows: [{ id: 'dev-w', name: 'Entwicklung', groups: [
+    { id: 'code', title: 'Code', color: 'purple', collapsed: false, tabs: [{ id: 'd1', url: 'https://git.example.dev/tabi' }, { id: 'd2', url: 'https://ci.example.dev/builds' }] },
+    { id: 'doku', title: 'Doku', color: 'cyan', collapsed: true, tabs: [{ id: 'd3', url: 'https://docs.example.dev/' }] }] }] });
+  const shot = new URLSearchParams(location.search).get('shot');
   mock.store.local.configRev = Date.now() - 3600e3;
   if (location.hash === '#fresh') { delete mock.store.local.config; delete mock.store.local.configRev; }
   window.__mock = mock;
@@ -51,8 +53,43 @@
   for (const img of document.querySelectorAll('img')) img.src = img.getAttribute('src').replace('../', '/');
 
   // Kurz warten, bis der Hintergrund die Vorlage aufgebaut hat.
-  await new Promise(r => setTimeout(r, 3500));
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  await sleep(3500);
+  if (shot === 'overview' || shot === 'color') {
+    await new Promise(r => mock.chrome.runtime.sendMessage({ type: 'openProfile', profileId: 'dev' }, r));
+    await sleep(500);
+  }
   await import('../options/options.js');
+
+  // Szenen für die Store-Screenshots (store/src/shot.html?view=…).
+  if (shot) {
+    await sleep(800);
+    if (shot === 'capture') {
+      document.getElementById('btnCapture').click();
+      await sleep(400);
+      const ung = document.querySelector('input[data-ung="0"]');
+      if (ung && !ung.checked) ung.click();
+    }
+    if (shot === 'import') {
+      const html = `<!DOCTYPE NETSCAPE-Bookmark-file-1><DL><p>
+        <DT><H3 PERSONAL_TOOLBAR_FOLDER="true">Favoritenleiste</H3><DL><p>
+          <DT><H3>Arbeit</H3><DL><p><DT><A HREF="https://mail.example.com/">Mail</A><DT><A HREF="https://calendar.example.com/">Kalender</A><DT><A HREF="https://wiki.example.com/">Wiki</A></DL><p>
+          <DT><H3>Nachrichten</H3><DL><p><DT><A HREF="https://news.example.org/">News</A><DT><A HREF="https://blog.example.net/">Blog</A></DL><p>
+          <DT><H3>Shopping</H3><DL><p><DT><A HREF="https://shop.example.com/">Shop</A></DL><p>
+        </DL><p></DL><p>`;
+      const dt = new DataTransfer();
+      dt.items.add(new File([html], 'favorites.html', { type: 'text/html' }));
+      const inp = document.getElementById('fileImport');
+      inp.files = dt.files;
+      inp.dispatchEvent(new Event('change'));
+      await sleep(400);
+      document.querySelector('#impGroups input[data-g="2"]')?.click();
+    }
+    if (shot === 'color') {
+      document.querySelector('.grp .color-btn')?.click();
+    }
+    document.activeElement?.blur?.();
+  }
 </script>
 </body>
 </html>

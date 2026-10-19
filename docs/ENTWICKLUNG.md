@@ -1,6 +1,6 @@
 # Entwicklung & Release
 
-Stand: Version 0.4.0 · [Zurück zur Übersicht](../README.md)
+Stand: Version 0.5.0 · [Zurück zur Übersicht](../README.md)
 
 - [Projektstruktur](#projektstruktur)
 - [Entwickeln](#entwickeln)
@@ -16,7 +16,8 @@ Stand: Version 0.4.0 · [Zurück zur Übersicht](../README.md)
 
 ```
 Tabi/
-├── manifest.json            Manifest V3 (tabs, tabGroups, storage), Version
+├── manifest.json            Manifest V3 (tabs, tabGroups, storage), Version; Name/Beschreibung über __MSG_…__
+├── _locales/de, _locales/en Name, Kurzbeschreibung, Symbol-Tooltip (Standard: de)
 ├── background.js            Service-Worker: Lebenszyklus, Zuordnung, Abgleich, Reparatur,
 │                            Schleifenschutz, Profile, Sync, Nachrichten
 ├── lib/
@@ -37,8 +38,13 @@ Tabi/
 ├── tools/
 │   ├── build-zip.ps1        Paket dist/tabi-<version>.zip (ohne Tests, ohne "key")
 │   ├── release.ps1          Version prüfen, Paket bauen, Tag + GitHub-Release
+│   ├── store-assets.ps1     Store-Grafiken per Headless-Edge aus store/src rendern
 │   └── sync-id-aktivieren.ps1  fester Schlüssel für Sync bei entpackten Installationen
-├── docs/                    Dokumentation
+├── store/
+│   ├── EINREICHUNG.md       alle Texte und Angaben für Partner Center (Edge-Add-ons)
+│   ├── src/                 HTML-Vorlagen für Logo, Kacheln, Screenshot-Rahmen
+│   └── assets/              erzeugte PNGs (Logo 300², Kacheln 440×280 / 1400×560, Screenshots 1280×800)
+├── docs/                    Dokumentation (deutsch) + PRIVACY.md (englisch, für den Store)
 ├── .github/ISSUE_TEMPLATE/  Vorlagen für Fehlermeldungen und Wünsche
 ├── CHANGELOG.md             Patchnotes
 └── README.md
@@ -130,16 +136,25 @@ Jede Änderung wird **im selben Commit** dokumentiert:
    - ist das Arbeitsverzeichnis sauber?
 
    Danach baut es `dist/tabi-x.y.z.zip`, legt den Tag `vx.y.z` an, pusht ihn und erstellt mit der GitHub-CLI (`gh`) das Release, mit den Patchnotes aus dem Changelog und dem ZIP. Mit `-DryRun` wird nur angezeigt, was passieren würde.
-6. Optional die Store-Version hochladen (siehe unten).
+6. Ändert sich die Oberfläche sichtbar: die Store-Grafiken neu erzeugen und die Bilder in `store/assets/` prüfen.
+   ```bash
+   powershell -ExecutionPolicy Bypass -File tools\store-assets.ps1
+   ```
+7. Die Store-Version hochladen (siehe unten).
 
 ## Veröffentlichung im Store
+
+**Edge-Add-ons:** Die vollständige Anleitung mit allen Texten zum Kopieren steht in [store/EINREICHUNG.md](../store/EINREICHUNG.md). Dazu gehören Datenschutz-Angaben, Begründungen der Berechtigungen, Beschreibungen auf Deutsch und Englisch, Suchbegriffe und Hinweise für die Prüfer.
 
 | | Microsoft Edge-Add-ons | Chrome Web Store |
 |---|---|---|
 | Konto | kostenlos im [Partner Center](https://partner.microsoft.com/dashboard/microsoftedge/) | einmalig 5 US-$ im [Developer Dashboard](https://chrome.google.com/webstore/devconsole) |
 | Paket | `dist/tabi-<version>.zip` (`tools/build-zip.ps1` entfernt `key`, die Stores lehnen ihn ab) | dasselbe |
-| Angaben | Beschreibung, Screenshots 1280×800, Kategorie, Datenschutz (Text aus [DATENSCHUTZ.md](DATENSCHUTZ.md)), Begründung für `tabs` | dito |
-| Prüfung | einige Werktage | meist wenige Tage |
+| Grafiken | `store/assets/`: Logo 300×300 (Pflicht), Kacheln 440×280 / 1400×560, Screenshots 1280×800 (max. 6) | Kachel 440×280, Screenshots 1280×800 (max. 5) |
+| Datenschutz | URL `https://github.com/ChriisJ/Tabi/blob/main/docs/PRIVACY.md` | dito |
+| Prüfung | laut Microsoft bis zu 7 Werktage | meist wenige Tage |
+
+**Store-Texte und `_locales`:** Name und Kurzbeschreibung (max. 132 Zeichen) liest der Store aus `_locales/*/messages.json`. Sie lassen sich dort nur ändern, indem man ein neues Paket hochlädt. Jede Sprache in `_locales` braucht im Partner Center eine eigene Beschreibung und ein eigenes Logo.
 
 Hinweise:
 - Die Store-Version hat eine **eigene, feste ID**, die sich von der entpackten unterscheidet. Nutzer exportieren vorher und importieren danach.

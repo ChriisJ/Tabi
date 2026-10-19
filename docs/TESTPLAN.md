@@ -1,10 +1,10 @@
 # Testplan
 
-Stand: Version 0.4.0 + unveröffentlichte Änderungen ([Changelog](../CHANGELOG.md#unveröffentlicht)) · [Zurück zur Übersicht](../README.md)
+Stand: Version 0.5.0 · [Zurück zur Übersicht](../README.md)
 
 ## Kennzeichnung
 
-- **[S]** – automatisiert gegen eine **simulierte** chrome-API geprüft (`tests/run.html`). Aktuell (0.4.0 + unveröffentlichte Änderungen) bestehen alle **116 Prüfungen**. Die Simulation bildet das Gruppen- und Positionsverhalten von Chromium nur **näherungsweise** nach.
+- **[S]** – automatisiert gegen eine **simulierte** chrome-API geprüft (`tests/run.html`). Bei 0.5.0 bestehen alle **116 Prüfungen**. Die Simulation bildet das Gruppen- und Positionsverhalten von Chromium nur **näherungsweise** nach.
 - **[E]** – in echtem Edge zu prüfen. **Bisher in echtem Edge nicht durchgeführt.** Ergebnisse bitte unten in die [Testprotokolle](#testprotokolle) eintragen.
 
 ## Automatisierte Logiktests
@@ -68,4 +68,5 @@ Für jede Version, die in Edge getestet wurde, eine Zeile ergänzen:
 
 | Version | Datum | Edge-Version | Getestet von | Ergebnis | Bemerkungen |
 |---|---|---|---|---|---|
+| 0.5.0 | 2026-10-20 | – | ChriisJ | **funktioniert laut Nutzer** (inkl. zwei Profile in zwei Fenstern); einzelne Tests nicht protokolliert | automatisiert: 116/116 [S] |
 | 0.4.0 | – | – | – | **noch nicht in Edge getestet** | automatisiert: 106/106 [S] |

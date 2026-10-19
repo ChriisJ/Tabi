@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Tabi – kleine Kachel</title>
+<link rel="stylesheet" href="brand.css">
+<style>
+  /* 440 × 280 – feste Größe, wird oben links gerendert und zugeschnitten */
+  html, body { width: 440px; height: 280px; }
+  .stage { display: flex; flex-direction: column; justify-content: center; padding: 0 34px; gap: 14px; }
+  .row { display: flex; align-items: center; gap: 16px; }
+  .row img { width: 84px; height: 84px; }
+  .name { font-size: 44px; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); }
+  .tag { font-size: 19px; font-weight: 600; color: var(--blue); line-height: 1.25; }
+  .chips { display: flex; gap: 6px; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="row">
+      <img src="../assets/logo-300.png" alt="">
+      <div class="name">Tabi</div>
+    </div>
+    <div class="tag" data-de="Tab-Vorlagen &amp; geschützte Tabs<br>für Microsoft Edge" data-en="Tab templates &amp; protected tabs<br>for Microsoft Edge"></div>
+    <div class="chips">
+      <span class="chip" style="background: var(--g-blue)" data-de="Arbeit" data-en="Work"></span>
+      <span class="chip" style="background: var(--g-green)" data-de="Recherche" data-en="Research"></span>
+      <span class="chip" style="background: var(--g-orange)" data-de="Tools" data-en="Tools"></span>
+    </div>
+  </div>
+  <script src="lang.js"></script>
+</body>
+</html>

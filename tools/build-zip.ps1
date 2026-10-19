@@ -13,7 +13,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $manifestPath = Join-Path $root 'manifest.json'
 $manifestText = [IO.File]::ReadAllText($manifestPath)
 $version = ($manifestText | ConvertFrom-Json).version
-$include = @('manifest.json', 'background.js', 'lib', 'popup', 'options', 'ui', 'icons')
+$include = @('manifest.json', 'background.js', '_locales', 'lib', 'popup', 'options', 'ui', 'icons')
 
 $dist = Join-Path $root 'dist'
 New-Item -ItemType Directory -Force $dist | Out-Null
